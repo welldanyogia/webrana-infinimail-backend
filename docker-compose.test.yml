@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: infinimail
+      POSTGRES_PASSWORD: infinimail
+      POSTGRES_DB: infinimail
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U infinimail -d infinimail"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    environment:
+      DATABASE_URL: postgres://infinimail:infinimail@db:5432/infinimail?sslmode=disable
+      API_PORT: 8080
+      SMTP_PORT: 2525
+      AUTO_PROVISIONING_ENABLED: "true"
+      ATTACHMENT_STORAGE_PATH: /app/attachments
+      LOG_LEVEL: info
+    ports:
+      - "8081:8080"
+      - "2526:2525"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
