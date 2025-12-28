@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/welldanyogia/webrana-infinimail-backend/internal/api"
+	"github.com/welldanyogia/webrana-infinimail-backend/internal/api/response"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/storage"
 )
@@ -36,63 +36,63 @@ func NewAttachmentHandler(
 func (h *AttachmentHandler) List(c echo.Context) error {
 	messageID, err := strconv.ParseUint(c.Param("message_id"), 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid message ID")
+		return response.BadRequest(c, "invalid message ID")
 	}
 
 	// Verify message exists
 	_, err = h.messageRepo.GetByID(c.Request().Context(), uint(messageID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "message not found")
+			return response.NotFound(c, "message not found")
 		}
-		return api.InternalError(c, "failed to get message")
+		return response.InternalError(c, "failed to get message")
 	}
 
 	attachments, err := h.attachmentRepo.ListByMessage(c.Request().Context(), uint(messageID))
 	if err != nil {
-		return api.InternalError(c, "failed to list attachments")
+		return response.InternalError(c, "failed to list attachments")
 	}
 
-	return api.Success(c, attachments)
+	return response.Success(c, attachments)
 }
 
 // Get handles GET /api/attachments/:id
 func (h *AttachmentHandler) Get(c echo.Context) error {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid attachment ID")
+		return response.BadRequest(c, "invalid attachment ID")
 	}
 
 	attachment, err := h.attachmentRepo.GetByID(c.Request().Context(), uint(id))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "attachment not found")
+			return response.NotFound(c, "attachment not found")
 		}
-		return api.InternalError(c, "failed to get attachment")
+		return response.InternalError(c, "failed to get attachment")
 	}
 
-	return api.Success(c, attachment)
+	return response.Success(c, attachment)
 }
 
 // Download handles GET /api/attachments/:id/download
 func (h *AttachmentHandler) Download(c echo.Context) error {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid attachment ID")
+		return response.BadRequest(c, "invalid attachment ID")
 	}
 
 	attachment, err := h.attachmentRepo.GetByID(c.Request().Context(), uint(id))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "attachment not found")
+			return response.NotFound(c, "attachment not found")
 		}
-		return api.InternalError(c, "failed to get attachment")
+		return response.InternalError(c, "failed to get attachment")
 	}
 
 	// Get file from storage
 	file, err := h.fileStorage.Get(attachment.FilePath)
 	if err != nil {
-		return api.InternalError(c, "failed to retrieve file")
+		return response.InternalError(c, "failed to retrieve file")
 	}
 	defer file.Close()
 
@@ -106,7 +106,7 @@ func (h *AttachmentHandler) Download(c echo.Context) error {
 	// Stream file to response
 	_, err = io.Copy(c.Response().Writer, file)
 	if err != nil {
-		return api.InternalError(c, "failed to send file")
+		return response.InternalError(c, "failed to send file")
 	}
 
 	return nil

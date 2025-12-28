@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/welldanyogia/webrana-infinimail-backend/internal/api"
+	"github.com/welldanyogia/webrana-infinimail-backend/internal/api/response"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
 )
 
@@ -27,16 +27,16 @@ func NewMessageHandler(messageRepo repository.MessageRepository, mailboxRepo rep
 func (h *MessageHandler) List(c echo.Context) error {
 	mailboxID, err := strconv.ParseUint(c.Param("mailbox_id"), 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid mailbox ID")
+		return response.BadRequest(c, "invalid mailbox ID")
 	}
 
 	// Verify mailbox exists
 	_, err = h.mailboxRepo.GetByID(c.Request().Context(), uint(mailboxID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "mailbox not found")
+			return response.NotFound(c, "mailbox not found")
 		}
-		return api.InternalError(c, "failed to get mailbox")
+		return response.InternalError(c, "failed to get mailbox")
 	}
 
 	limit := 20
@@ -55,25 +55,25 @@ func (h *MessageHandler) List(c echo.Context) error {
 
 	messages, total, err := h.messageRepo.ListByMailbox(c.Request().Context(), uint(mailboxID), limit, offset)
 	if err != nil {
-		return api.InternalError(c, "failed to list messages")
+		return response.InternalError(c, "failed to list messages")
 	}
 
-	return api.Paginated(c, messages, total, limit, offset)
+	return response.Paginated(c, messages, total, limit, offset)
 }
 
 // Get handles GET /api/messages/:id
 func (h *MessageHandler) Get(c echo.Context) error {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid message ID")
+		return response.BadRequest(c, "invalid message ID")
 	}
 
 	message, err := h.messageRepo.GetByID(c.Request().Context(), uint(id))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "message not found")
+			return response.NotFound(c, "message not found")
 		}
-		return api.InternalError(c, "failed to get message")
+		return response.InternalError(c, "failed to get message")
 	}
 
 	// Auto mark as read
@@ -82,39 +82,39 @@ func (h *MessageHandler) Get(c echo.Context) error {
 		message.IsRead = true
 	}
 
-	return api.Success(c, message)
+	return response.Success(c, message)
 }
 
 // MarkAsRead handles PATCH /api/messages/:id/read
 func (h *MessageHandler) MarkAsRead(c echo.Context) error {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid message ID")
+		return response.BadRequest(c, "invalid message ID")
 	}
 
 	if err := h.messageRepo.MarkAsRead(c.Request().Context(), uint(id)); err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "message not found")
+			return response.NotFound(c, "message not found")
 		}
-		return api.InternalError(c, "failed to mark message as read")
+		return response.InternalError(c, "failed to mark message as read")
 	}
 
-	return api.SuccessWithMessage(c, nil, "message marked as read")
+	return response.SuccessWithMessage(c, nil, "message marked as read")
 }
 
 // Delete handles DELETE /api/messages/:id
 func (h *MessageHandler) Delete(c echo.Context) error {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid message ID")
+		return response.BadRequest(c, "invalid message ID")
 	}
 
 	if err := h.messageRepo.Delete(c.Request().Context(), uint(id)); err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "message not found")
+			return response.NotFound(c, "message not found")
 		}
-		return api.InternalError(c, "failed to delete message")
+		return response.InternalError(c, "failed to delete message")
 	}
 
-	return api.NoContent(c)
+	return response.NoContent(c)
 }

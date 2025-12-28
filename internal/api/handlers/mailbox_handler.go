@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/welldanyogia/webrana-infinimail-backend/internal/api"
+	"github.com/welldanyogia/webrana-infinimail-backend/internal/api/response"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/models"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
 )
@@ -41,27 +41,27 @@ type CreateRandomMailboxRequest struct {
 func (h *MailboxHandler) Create(c echo.Context) error {
 	var req CreateMailboxRequest
 	if err := c.Bind(&req); err != nil {
-		return api.BadRequest(c, "invalid request body")
+		return response.BadRequest(c, "invalid request body")
 	}
 
 	if req.LocalPart == "" {
-		return api.BadRequest(c, "local_part is required")
+		return response.BadRequest(c, "local_part is required")
 	}
 	if req.DomainID == 0 {
-		return api.BadRequest(c, "domain_id is required")
+		return response.BadRequest(c, "domain_id is required")
 	}
 
 	// Get domain to verify it exists and is active
 	domain, err := h.domainRepo.GetByID(c.Request().Context(), req.DomainID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "domain not found")
+			return response.NotFound(c, "domain not found")
 		}
-		return api.InternalError(c, "failed to get domain")
+		return response.InternalError(c, "failed to get domain")
 	}
 
 	if !domain.IsActive {
-		return api.BadRequest(c, "domain is not active")
+		return response.BadRequest(c, "domain is not active")
 	}
 
 	mailbox := &models.Mailbox{
@@ -72,36 +72,36 @@ func (h *MailboxHandler) Create(c echo.Context) error {
 
 	if err := h.mailboxRepo.Create(c.Request().Context(), mailbox); err != nil {
 		if errors.Is(err, repository.ErrDuplicateEntry) {
-			return api.Conflict(c, "mailbox already exists")
+			return response.Conflict(c, "mailbox already exists")
 		}
-		return api.InternalError(c, "failed to create mailbox")
+		return response.InternalError(c, "failed to create mailbox")
 	}
 
-	return api.Created(c, mailbox)
+	return response.Created(c, mailbox)
 }
 
 // CreateRandom handles POST /api/mailboxes/random
 func (h *MailboxHandler) CreateRandom(c echo.Context) error {
 	var req CreateRandomMailboxRequest
 	if err := c.Bind(&req); err != nil {
-		return api.BadRequest(c, "invalid request body")
+		return response.BadRequest(c, "invalid request body")
 	}
 
 	if req.DomainID == 0 {
-		return api.BadRequest(c, "domain_id is required")
+		return response.BadRequest(c, "domain_id is required")
 	}
 
 	// Get domain to verify it exists and is active
 	domain, err := h.domainRepo.GetByID(c.Request().Context(), req.DomainID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "domain not found")
+			return response.NotFound(c, "domain not found")
 		}
-		return api.InternalError(c, "failed to get domain")
+		return response.InternalError(c, "failed to get domain")
 	}
 
 	if !domain.IsActive {
-		return api.BadRequest(c, "domain is not active")
+		return response.BadRequest(c, "domain is not active")
 	}
 
 	// Generate random 8-character alphanumeric local part
@@ -120,26 +120,26 @@ func (h *MailboxHandler) CreateRandom(c echo.Context) error {
 			mailbox.LocalPart = localPart
 			mailbox.FullAddress = localPart + "@" + domain.Name
 			if err := h.mailboxRepo.Create(c.Request().Context(), mailbox); err != nil {
-				return api.InternalError(c, "failed to create mailbox")
+				return response.InternalError(c, "failed to create mailbox")
 			}
 		} else {
-			return api.InternalError(c, "failed to create mailbox")
+			return response.InternalError(c, "failed to create mailbox")
 		}
 	}
 
-	return api.Created(c, mailbox)
+	return response.Created(c, mailbox)
 }
 
 // List handles GET /api/mailboxes
 func (h *MailboxHandler) List(c echo.Context) error {
 	domainIDStr := c.QueryParam("domain_id")
 	if domainIDStr == "" {
-		return api.BadRequest(c, "domain_id is required")
+		return response.BadRequest(c, "domain_id is required")
 	}
 
 	domainID, err := strconv.ParseUint(domainIDStr, 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid domain_id")
+		return response.BadRequest(c, "invalid domain_id")
 	}
 
 	limit := 20
@@ -158,48 +158,48 @@ func (h *MailboxHandler) List(c echo.Context) error {
 
 	mailboxes, total, err := h.mailboxRepo.ListByDomain(c.Request().Context(), uint(domainID), limit, offset)
 	if err != nil {
-		return api.InternalError(c, "failed to list mailboxes")
+		return response.InternalError(c, "failed to list mailboxes")
 	}
 
-	return api.Paginated(c, mailboxes, total, limit, offset)
+	return response.Paginated(c, mailboxes, total, limit, offset)
 }
 
 // Get handles GET /api/mailboxes/:id
 func (h *MailboxHandler) Get(c echo.Context) error {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid mailbox ID")
+		return response.BadRequest(c, "invalid mailbox ID")
 	}
 
 	mailbox, err := h.mailboxRepo.GetByID(c.Request().Context(), uint(id))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "mailbox not found")
+			return response.NotFound(c, "mailbox not found")
 		}
-		return api.InternalError(c, "failed to get mailbox")
+		return response.InternalError(c, "failed to get mailbox")
 	}
 
 	// Update last accessed timestamp
 	_ = h.mailboxRepo.UpdateLastAccessed(c.Request().Context(), uint(id))
 
-	return api.Success(c, mailbox)
+	return response.Success(c, mailbox)
 }
 
 // Delete handles DELETE /api/mailboxes/:id
 func (h *MailboxHandler) Delete(c echo.Context) error {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		return api.BadRequest(c, "invalid mailbox ID")
+		return response.BadRequest(c, "invalid mailbox ID")
 	}
 
 	if err := h.mailboxRepo.Delete(c.Request().Context(), uint(id)); err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return api.NotFound(c, "mailbox not found")
+			return response.NotFound(c, "mailbox not found")
 		}
-		return api.InternalError(c, "failed to delete mailbox")
+		return response.InternalError(c, "failed to delete mailbox")
 	}
 
-	return api.NoContent(c)
+	return response.NoContent(c)
 }
 
 // generateRandomString generates a random alphanumeric string of given length
