@@ -80,21 +80,27 @@ func parseFromHeader(from string) (name, email string) {
 		return "", ""
 	}
 
-	// Pattern: "Name" <email@example.com> or Name <email@example.com>
-	re := regexp.MustCompile(`^(?:"?([^"<]*)"?\s*)?<?([^<>]+@[^<>]+)>?$`)
-	matches := re.FindStringSubmatch(from)
-
-	if len(matches) >= 3 {
-		name = strings.TrimSpace(matches[1])
-		email = strings.TrimSpace(matches[2])
-		// Remove quotes from name
-		name = strings.Trim(name, `"`)
-	} else {
-		// Fallback: treat entire string as email
-		email = from
+	// Check if it contains angle brackets: "Name" <email@example.com> or Name <email@example.com>
+	if strings.Contains(from, "<") && strings.Contains(from, ">") {
+		re := regexp.MustCompile(`^(?:"?([^"<]*)"?\s*)?<([^<>]+@[^<>]+)>$`)
+		matches := re.FindStringSubmatch(from)
+		if len(matches) >= 3 {
+			name = strings.TrimSpace(matches[1])
+			email = strings.TrimSpace(matches[2])
+			// Remove quotes from name
+			name = strings.Trim(name, `"`)
+			return name, email
+		}
 	}
 
-	return name, email
+	// No angle brackets - check if it's a valid email address
+	if strings.Contains(from, "@") {
+		// It's just an email address without name
+		return "", from
+	}
+
+	// Fallback: treat entire string as email
+	return "", from
 }
 
 // generateSnippet creates a preview snippet from email body
@@ -122,13 +128,17 @@ func generateSnippet(bodyText, bodyHTML string) string {
 
 // stripHTMLTags removes HTML tags from a string
 func stripHTMLTags(html string) string {
-	// Remove script and style elements
-	re := regexp.MustCompile(`(?i)<(script|style)[^>]*>[\s\S]*?</\1>`)
-	html = re.ReplaceAllString(html, "")
+	// Remove script elements (Go regex doesn't support backreferences)
+	reScript := regexp.MustCompile(`(?i)<script[^>]*>[\s\S]*?</script>`)
+	html = reScript.ReplaceAllString(html, "")
+
+	// Remove style elements
+	reStyle := regexp.MustCompile(`(?i)<style[^>]*>[\s\S]*?</style>`)
+	html = reStyle.ReplaceAllString(html, "")
 
 	// Remove HTML tags
-	re = regexp.MustCompile(`<[^>]*>`)
-	html = re.ReplaceAllString(html, " ")
+	reTags := regexp.MustCompile(`<[^>]*>`)
+	html = reTags.ReplaceAllString(html, " ")
 
 	// Decode common HTML entities
 	html = strings.ReplaceAll(html, "&nbsp;", " ")
