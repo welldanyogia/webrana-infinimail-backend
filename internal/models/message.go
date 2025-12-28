@@ -29,13 +29,13 @@ func (Message) TableName() string {
 
 // MessageListItem is a lightweight version for list views
 type MessageListItem struct {
-	ID          uint      `json:"id"`
-	MailboxID   uint      `json:"mailbox_id"`
-	SenderEmail string    `json:"sender_email"`
-	SenderName  string    `json:"sender_name,omitempty"`
-	Subject     string    `json:"subject,omitempty"`
-	Snippet     string    `json:"snippet,omitempty"`
-	IsRead      bool      `json:"is_read"`
-	ReceivedAt  time.Time `json:"received_at"`
-	HasAttachments bool   `json:"has_attachments"`
+	ID              uint      `json:"id"`
+	MailboxID       uint      `json:"mailbox_id"`
+	SenderEmail     string    `json:"sender_email"`
+	SenderName      string    `json:"sender_name,omitempty"`
+	Subject         string    `json:"subject,omitempty"`
+	Snippet         string    `json:"snippet,omitempty"`
+	IsRead          bool      `json:"is_read"`
+	ReceivedAt      time.Time `json:"received_at"`
+	AttachmentCount int       `json:"attachment_count"`
 }
