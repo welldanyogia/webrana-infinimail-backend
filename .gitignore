@@ -34,3 +34,6 @@ attachments/
 # OS files
 .DS_Store
 Thumbs.db
+
+#kiro
+.kiro/
