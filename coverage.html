@@ -1,0 +1,3935 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>server: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/welldanyogia/webrana-infinimail-backend/cmd/server/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/welldanyogia/webrana-infinimail-backend/internal/api/handlers/attachment_handler.go (95.2%)</option>
+				
+				<option value="file2">github.com/welldanyogia/webrana-infinimail-backend/internal/api/handlers/domain_handler.go (96.4%)</option>
+				
+				<option value="file3">github.com/welldanyogia/webrana-infinimail-backend/internal/api/handlers/health_handler.go (0.0%)</option>
+				
+				<option value="file4">github.com/welldanyogia/webrana-infinimail-backend/internal/api/handlers/mailbox_handler.go (84.9%)</option>
+				
+				<option value="file5">github.com/welldanyogia/webrana-infinimail-backend/internal/api/handlers/message_handler.go (98.0%)</option>
+				
+				<option value="file6">github.com/welldanyogia/webrana-infinimail-backend/internal/api/middleware/middleware.go (0.0%)</option>
+				
+				<option value="file7">github.com/welldanyogia/webrana-infinimail-backend/internal/api/response/response.go (0.0%)</option>
+				
+				<option value="file8">github.com/welldanyogia/webrana-infinimail-backend/internal/api/router.go (0.0%)</option>
+				
+				<option value="file9">github.com/welldanyogia/webrana-infinimail-backend/internal/config/config.go (0.0%)</option>
+				
+				<option value="file10">github.com/welldanyogia/webrana-infinimail-backend/internal/database/database.go (0.0%)</option>
+				
+				<option value="file11">github.com/welldanyogia/webrana-infinimail-backend/internal/errors/errors.go (0.0%)</option>
+				
+				<option value="file12">github.com/welldanyogia/webrana-infinimail-backend/internal/models/attachment.go (0.0%)</option>
+				
+				<option value="file13">github.com/welldanyogia/webrana-infinimail-backend/internal/models/domain.go (0.0%)</option>
+				
+				<option value="file14">github.com/welldanyogia/webrana-infinimail-backend/internal/models/mailbox.go (0.0%)</option>
+				
+				<option value="file15">github.com/welldanyogia/webrana-infinimail-backend/internal/models/message.go (0.0%)</option>
+				
+				<option value="file16">github.com/welldanyogia/webrana-infinimail-backend/internal/repository/attachment_repository.go (0.0%)</option>
+				
+				<option value="file17">github.com/welldanyogia/webrana-infinimail-backend/internal/repository/domain_repository.go (0.0%)</option>
+				
+				<option value="file18">github.com/welldanyogia/webrana-infinimail-backend/internal/repository/errors.go (0.0%)</option>
+				
+				<option value="file19">github.com/welldanyogia/webrana-infinimail-backend/internal/repository/mailbox_repository.go (0.0%)</option>
+				
+				<option value="file20">github.com/welldanyogia/webrana-infinimail-backend/internal/repository/message_repository.go (0.0%)</option>
+				
+				<option value="file21">github.com/welldanyogia/webrana-infinimail-backend/internal/smtp/backend.go (0.0%)</option>
+				
+				<option value="file22">github.com/welldanyogia/webrana-infinimail-backend/internal/smtp/parser.go (92.0%)</option>
+				
+				<option value="file23">github.com/welldanyogia/webrana-infinimail-backend/internal/smtp/session.go (0.0%)</option>
+				
+				<option value="file24">github.com/welldanyogia/webrana-infinimail-backend/internal/storage/file_storage.go (0.0%)</option>
+				
+				<option value="file25">github.com/welldanyogia/webrana-infinimail-backend/internal/websocket/client.go (0.0%)</option>
+				
+				<option value="file26">github.com/welldanyogia/webrana-infinimail-backend/internal/websocket/hub.go (0.0%)</option>
+				
+				<option value="file27">github.com/welldanyogia/webrana-infinimail-backend/tests/fixtures/testdata.go (0.0%)</option>
+				
+				<option value="file28">github.com/welldanyogia/webrana-infinimail-backend/tests/mocks/repository_mocks.go (0.0%)</option>
+				
+				<option value="file29">github.com/welldanyogia/webrana-infinimail-backend/tests/mocks/storage_mocks.go (0.0%)</option>
+				
+				<option value="file30">github.com/welldanyogia/webrana-infinimail-backend/tests/mocks/websocket_mocks.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "context"
+        "fmt"
+        "log/slog"
+        "net/http"
+        "os"
+        "os/signal"
+        "syscall"
+        "time"
+
+        gosmtp "github.com/emersion/go-smtp"
+        "github.com/gorilla/websocket"
+        "github.com/labstack/echo/v4"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/api"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/config"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/database"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/smtp"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/storage"
+        ws "github.com/welldanyogia/webrana-infinimail-backend/internal/websocket"
+)
+
+func main() <span class="cov0" title="0">{
+        // Setup logger
+        logLevel := slog.LevelInfo
+        logger := slog.New(slog.NewJSONHandler(os.Stdout, &amp;slog.HandlerOptions{
+                Level: logLevel,
+        }))
+        slog.SetDefault(logger)
+
+        // Load configuration
+        cfg, err := config.Load()
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error("failed to load configuration", slog.Any("error", err))
+                os.Exit(1)
+        }</span>
+
+        // Update log level from config
+        <span class="cov0" title="0">switch cfg.LogLevel </span>{
+        case "debug":<span class="cov0" title="0">
+                logLevel = slog.LevelDebug</span>
+        case "warn":<span class="cov0" title="0">
+                logLevel = slog.LevelWarn</span>
+        case "error":<span class="cov0" title="0">
+                logLevel = slog.LevelError</span>
+        }
+        <span class="cov0" title="0">logger = slog.New(slog.NewJSONHandler(os.Stdout, &amp;slog.HandlerOptions{
+                Level: logLevel,
+        }))
+        slog.SetDefault(logger)
+
+        logger.Info("starting Infinimail backend",
+                slog.Int("api_port", cfg.APIPort),
+                slog.Int("smtp_port", cfg.SMTPPort))
+
+        // Initialize database
+        db, err := database.Connect(cfg.DatabaseURL)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error("failed to connect to database", slog.Any("error", err))
+                os.Exit(1)
+        }</span>
+
+        // Run migrations
+        <span class="cov0" title="0">if err := database.Migrate(db); err != nil </span><span class="cov0" title="0">{
+                logger.Error("failed to run migrations", slog.Any("error", err))
+                os.Exit(1)
+        }</span>
+        <span class="cov0" title="0">logger.Info("database migrations completed")
+
+        // Initialize file storage
+        fileStorage, err := storage.NewLocalStorage(cfg.AttachmentStoragePath)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error("failed to initialize file storage", slog.Any("error", err))
+                os.Exit(1)
+        }</span>
+
+        // Initialize WebSocket hub
+        <span class="cov0" title="0">wsHub := ws.NewHub(logger)
+        go wsHub.Run()
+
+        // Initialize repositories
+        domainRepo := repository.NewDomainRepository(db)
+        mailboxRepo := repository.NewMailboxRepository(db)
+        messageRepo := repository.NewMessageRepository(db)
+        attachmentRepo := repository.NewAttachmentRepository(db, fileStorage)
+
+        // Initialize HTTP router
+        router := api.NewRouter(&amp;api.RouterConfig{
+                DB:          db,
+                FileStorage: fileStorage,
+                Logger:      logger,
+        })
+
+        // Add WebSocket endpoint
+        upgrader := websocket.Upgrader{
+                CheckOrigin: func(r *http.Request) bool </span><span class="cov0" title="0">{
+                        return true // Allow all origins for development
+                }</span>,
+        }
+
+        <span class="cov0" title="0">router.GET("/ws", func(c echo.Context) error </span><span class="cov0" title="0">{
+                conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+                if err != nil </span><span class="cov0" title="0">{
+                        logger.Error("websocket upgrade failed", slog.Any("error", err))
+                        return err
+                }</span>
+
+                <span class="cov0" title="0">client := ws.NewClient(wsHub, conn, logger)
+                wsHub.Register(client)
+
+                go client.WritePump()
+                go client.ReadPump()
+
+                return nil</span>
+        })
+
+        // Initialize SMTP server
+        <span class="cov0" title="0">smtpBackend := smtp.NewBackend(&amp;smtp.BackendConfig{
+                DomainRepo:     domainRepo,
+                MailboxRepo:    mailboxRepo,
+                MessageRepo:    messageRepo,
+                AttachmentRepo: attachmentRepo,
+                FileStorage:    fileStorage,
+                WSHub:          wsHub,
+                AutoProvision:  cfg.AutoProvisioningEnabled,
+                Logger:         logger,
+        })
+
+        smtpServer := gosmtp.NewServer(smtpBackend)
+        smtpServer.Addr = fmt.Sprintf(":%d", cfg.SMTPPort)
+        smtpServer.Domain = "localhost"
+        smtpServer.AllowInsecureAuth = true
+        smtpServer.MaxMessageBytes = 25 * 1024 * 1024 // 25 MB
+
+        // Start servers
+        errChan := make(chan error, 2)
+
+        // Start HTTP server
+        go func() </span><span class="cov0" title="0">{
+                addr := fmt.Sprintf(":%d", cfg.APIPort)
+                logger.Info("starting HTTP server", slog.String("addr", addr))
+                if err := router.Start(addr); err != nil &amp;&amp; err != http.ErrServerClosed </span><span class="cov0" title="0">{
+                        errChan &lt;- fmt.Errorf("HTTP server error: %w", err)
+                }</span>
+        }()
+
+        // Start SMTP server
+        <span class="cov0" title="0">go func() </span><span class="cov0" title="0">{
+                logger.Info("starting SMTP server", slog.String("addr", smtpServer.Addr))
+                if err := smtpServer.ListenAndServe(); err != nil </span><span class="cov0" title="0">{
+                        errChan &lt;- fmt.Errorf("SMTP server error: %w", err)
+                }</span>
+        }()
+
+        // Wait for interrupt signal
+        <span class="cov0" title="0">quit := make(chan os.Signal, 1)
+        signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+        select </span>{
+        case err := &lt;-errChan:<span class="cov0" title="0">
+                logger.Error("server error", slog.Any("error", err))</span>
+        case sig := &lt;-quit:<span class="cov0" title="0">
+                logger.Info("received shutdown signal", slog.String("signal", sig.String()))</span>
+        }
+
+        // Graceful shutdown
+        <span class="cov0" title="0">logger.Info("shutting down servers...")
+
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cancel()
+
+        // Shutdown HTTP server
+        if err := router.Shutdown(ctx); err != nil </span><span class="cov0" title="0">{
+                logger.Error("HTTP server shutdown error", slog.Any("error", err))
+        }</span>
+
+        // Shutdown SMTP server
+        <span class="cov0" title="0">if err := smtpServer.Close(); err != nil </span><span class="cov0" title="0">{
+                logger.Error("SMTP server shutdown error", slog.Any("error", err))
+        }</span>
+
+        // Close database connection
+        <span class="cov0" title="0">sqlDB, _ := db.DB()
+        if sqlDB != nil </span><span class="cov0" title="0">{
+                sqlDB.Close()
+        }</span>
+
+        <span class="cov0" title="0">logger.Info("servers stopped")</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handlers
+
+import (
+        "errors"
+        "fmt"
+        "io"
+        "strconv"
+
+        "github.com/labstack/echo/v4"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/api/response"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/storage"
+)
+
+// AttachmentHandler handles attachment-related HTTP requests
+type AttachmentHandler struct {
+        attachmentRepo repository.AttachmentRepository
+        messageRepo    repository.MessageRepository
+        fileStorage    storage.FileStorage
+}
+
+// NewAttachmentHandler creates a new AttachmentHandler
+func NewAttachmentHandler(
+        attachmentRepo repository.AttachmentRepository,
+        messageRepo repository.MessageRepository,
+        fileStorage storage.FileStorage,
+) *AttachmentHandler <span class="cov10" title="16">{
+        return &amp;AttachmentHandler{
+                attachmentRepo: attachmentRepo,
+                messageRepo:    messageRepo,
+                fileStorage:    fileStorage,
+        }
+}</span>
+
+// List handles GET /api/messages/:message_id/attachments
+func (h *AttachmentHandler) List(c echo.Context) error <span class="cov6" title="5">{
+        messageID, err := strconv.ParseUint(c.Param("message_id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid message ID")
+        }</span>
+
+        // Verify message exists
+        <span class="cov5" title="4">_, err = h.messageRepo.GetByID(c.Request().Context(), uint(messageID))
+        if err != nil </span><span class="cov1" title="1">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "message not found")
+                }</span>
+                <span class="cov0" title="0">return response.InternalError(c, "failed to get message")</span>
+        }
+
+        <span class="cov4" title="3">attachments, err := h.attachmentRepo.ListByMessage(c.Request().Context(), uint(messageID))
+        if err != nil </span><span class="cov1" title="1">{
+                return response.InternalError(c, "failed to list attachments")
+        }</span>
+
+        <span class="cov3" title="2">return response.Success(c, attachments)</span>
+}
+
+// Get handles GET /api/attachments/:id
+func (h *AttachmentHandler) Get(c echo.Context) error <span class="cov5" title="4">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid attachment ID")
+        }</span>
+
+        <span class="cov4" title="3">attachment, err := h.attachmentRepo.GetByID(c.Request().Context(), uint(id))
+        if err != nil </span><span class="cov3" title="2">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "attachment not found")
+                }</span>
+                <span class="cov1" title="1">return response.InternalError(c, "failed to get attachment")</span>
+        }
+
+        <span class="cov1" title="1">return response.Success(c, attachment)</span>
+}
+
+// Download handles GET /api/attachments/:id/download
+func (h *AttachmentHandler) Download(c echo.Context) error <span class="cov7" title="7">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid attachment ID")
+        }</span>
+
+        <span class="cov6" title="6">attachment, err := h.attachmentRepo.GetByID(c.Request().Context(), uint(id))
+        if err != nil </span><span class="cov3" title="2">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "attachment not found")
+                }</span>
+                <span class="cov1" title="1">return response.InternalError(c, "failed to get attachment")</span>
+        }
+
+        // Get file from storage
+        <span class="cov5" title="4">file, err := h.fileStorage.Get(attachment.FilePath)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.InternalError(c, "failed to retrieve file")
+        }</span>
+        <span class="cov4" title="3">defer file.Close()
+
+        // Set headers for download
+        c.Response().Header().Set("Content-Type", attachment.ContentType)
+        c.Response().Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, attachment.Filename))
+        if attachment.SizeBytes &gt; 0 </span><span class="cov4" title="3">{
+                c.Response().Header().Set("Content-Length", strconv.FormatInt(attachment.SizeBytes, 10))
+        }</span>
+
+        // Stream file to response
+        <span class="cov4" title="3">_, err = io.Copy(c.Response().Writer, file)
+        if err != nil </span><span class="cov0" title="0">{
+                return response.InternalError(c, "failed to send file")
+        }</span>
+
+        <span class="cov4" title="3">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package handlers
+
+import (
+        "errors"
+        "strconv"
+
+        "github.com/labstack/echo/v4"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/api/response"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+)
+
+// DomainHandler handles domain-related HTTP requests
+type DomainHandler struct {
+        repo repository.DomainRepository
+}
+
+// NewDomainHandler creates a new DomainHandler
+func NewDomainHandler(repo repository.DomainRepository) *DomainHandler <span class="cov10" title="24">{
+        return &amp;DomainHandler{repo: repo}
+}</span>
+
+// CreateDomainRequest represents the request body for creating a domain
+type CreateDomainRequest struct {
+        Name     string `json:"name" validate:"required"`
+        IsActive *bool  `json:"is_active,omitempty"`
+}
+
+// UpdateDomainRequest represents the request body for updating a domain
+type UpdateDomainRequest struct {
+        Name     string `json:"name,omitempty"`
+        IsActive *bool  `json:"is_active,omitempty"`
+}
+
+// Create handles POST /api/domains
+func (h *DomainHandler) Create(c echo.Context) error <span class="cov6" title="6">{
+        var req CreateDomainRequest
+        if err := c.Bind(&amp;req); err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid request body")
+        }</span>
+
+        <span class="cov5" title="5">if req.Name == "" </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "name is required")
+        }</span>
+
+        <span class="cov4" title="4">domain := &amp;models.Domain{
+                Name:     req.Name,
+                IsActive: true,
+        }
+        if req.IsActive != nil </span><span class="cov1" title="1">{
+                domain.IsActive = *req.IsActive
+        }</span>
+
+        <span class="cov4" title="4">if err := h.repo.Create(c.Request().Context(), domain); err != nil </span><span class="cov2" title="2">{
+                if errors.Is(err, repository.ErrDuplicateEntry) </span><span class="cov1" title="1">{
+                        return response.Conflict(c, "domain already exists")
+                }</span>
+                <span class="cov1" title="1">return response.InternalError(c, "failed to create domain")</span>
+        }
+
+        <span class="cov2" title="2">return response.Created(c, domain)</span>
+}
+
+// List handles GET /api/domains
+func (h *DomainHandler) List(c echo.Context) error <span class="cov4" title="4">{
+        activeOnly := c.QueryParam("active_only") == "true"
+
+        domains, err := h.repo.List(c.Request().Context(), activeOnly)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.InternalError(c, "failed to list domains")
+        }</span>
+
+        <span class="cov4" title="3">return response.Success(c, domains)</span>
+}
+
+// Get handles GET /api/domains/:id
+func (h *DomainHandler) Get(c echo.Context) error <span class="cov4" title="4">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid domain ID")
+        }</span>
+
+        <span class="cov4" title="3">domain, err := h.repo.GetByID(c.Request().Context(), uint(id))
+        if err != nil </span><span class="cov2" title="2">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "domain not found")
+                }</span>
+                <span class="cov1" title="1">return response.InternalError(c, "failed to get domain")</span>
+        }
+
+        <span class="cov1" title="1">return response.Success(c, domain)</span>
+}
+
+// Update handles PUT /api/domains/:id
+func (h *DomainHandler) Update(c echo.Context) error <span class="cov6" title="6">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid domain ID")
+        }</span>
+
+        <span class="cov5" title="5">var req UpdateDomainRequest
+        if err := c.Bind(&amp;req); err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid request body")
+        }</span>
+
+        // Get existing domain
+        <span class="cov4" title="4">domain, err := h.repo.GetByID(c.Request().Context(), uint(id))
+        if err != nil </span><span class="cov1" title="1">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "domain not found")
+                }</span>
+                <span class="cov0" title="0">return response.InternalError(c, "failed to get domain")</span>
+        }
+
+        // Update fields
+        <span class="cov4" title="3">if req.Name != "" </span><span class="cov2" title="2">{
+                domain.Name = req.Name
+        }</span>
+        <span class="cov4" title="3">if req.IsActive != nil </span><span class="cov1" title="1">{
+                domain.IsActive = *req.IsActive
+        }</span>
+
+        <span class="cov4" title="3">if err := h.repo.Update(c.Request().Context(), domain); err != nil </span><span class="cov1" title="1">{
+                if errors.Is(err, repository.ErrDuplicateEntry) </span><span class="cov1" title="1">{
+                        return response.Conflict(c, "domain name already exists")
+                }</span>
+                <span class="cov0" title="0">return response.InternalError(c, "failed to update domain")</span>
+        }
+
+        <span class="cov2" title="2">return response.Success(c, domain)</span>
+}
+
+// Delete handles DELETE /api/domains/:id
+func (h *DomainHandler) Delete(c echo.Context) error <span class="cov4" title="4">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid domain ID")
+        }</span>
+
+        <span class="cov4" title="3">if err := h.repo.Delete(c.Request().Context(), uint(id)); err != nil </span><span class="cov2" title="2">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "domain not found")
+                }</span>
+                <span class="cov1" title="1">return response.InternalError(c, "failed to delete domain")</span>
+        }
+
+        <span class="cov1" title="1">return response.NoContent(c)</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package handlers
+
+import (
+        "net/http"
+
+        "github.com/labstack/echo/v4"
+        "gorm.io/gorm"
+)
+
+// HealthHandler handles health check HTTP requests
+type HealthHandler struct {
+        db *gorm.DB
+}
+
+// NewHealthHandler creates a new HealthHandler
+func NewHealthHandler(db *gorm.DB) *HealthHandler <span class="cov0" title="0">{
+        return &amp;HealthHandler{db: db}
+}</span>
+
+// HealthResponse represents the health check response
+type HealthResponse struct {
+        Status   string            `json:"status"`
+        Services map[string]string `json:"services"`
+}
+
+// Health handles GET /health
+func (h *HealthHandler) Health(c echo.Context) error <span class="cov0" title="0">{
+        services := make(map[string]string)
+        status := "healthy"
+
+        // Check database connection
+        sqlDB, err := h.db.DB()
+        if err != nil </span><span class="cov0" title="0">{
+                services["database"] = "unhealthy"
+                status = "unhealthy"
+        }</span> else<span class="cov0" title="0"> if err := sqlDB.Ping(); err != nil </span><span class="cov0" title="0">{
+                services["database"] = "unhealthy"
+                status = "unhealthy"
+        }</span> else<span class="cov0" title="0"> {
+                services["database"] = "healthy"
+        }</span>
+
+        <span class="cov0" title="0">statusCode := http.StatusOK
+        if status == "unhealthy" </span><span class="cov0" title="0">{
+                statusCode = http.StatusServiceUnavailable
+        }</span>
+
+        <span class="cov0" title="0">return c.JSON(statusCode, HealthResponse{
+                Status:   status,
+                Services: services,
+        })</span>
+}
+
+// Ready handles GET /ready
+func (h *HealthHandler) Ready(c echo.Context) error <span class="cov0" title="0">{
+        // Check database connection
+        sqlDB, err := h.db.DB()
+        if err != nil </span><span class="cov0" title="0">{
+                return c.JSON(http.StatusServiceUnavailable, map[string]string{
+                        "status": "not ready",
+                        "reason": "database connection failed",
+                })
+        }</span>
+
+        <span class="cov0" title="0">if err := sqlDB.Ping(); err != nil </span><span class="cov0" title="0">{
+                return c.JSON(http.StatusServiceUnavailable, map[string]string{
+                        "status": "not ready",
+                        "reason": "database ping failed",
+                })
+        }</span>
+
+        <span class="cov0" title="0">return c.JSON(http.StatusOK, map[string]string{
+                "status": "ready",
+        })</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package handlers
+
+import (
+        "crypto/rand"
+        "errors"
+        "math/big"
+        "strconv"
+
+        "github.com/labstack/echo/v4"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/api/response"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+)
+
+// MailboxHandler handles mailbox-related HTTP requests
+type MailboxHandler struct {
+        mailboxRepo repository.MailboxRepository
+        domainRepo  repository.DomainRepository
+}
+
+// NewMailboxHandler creates a new MailboxHandler
+func NewMailboxHandler(mailboxRepo repository.MailboxRepository, domainRepo repository.DomainRepository) *MailboxHandler <span class="cov7" title="23">{
+        return &amp;MailboxHandler{
+                mailboxRepo: mailboxRepo,
+                domainRepo:  domainRepo,
+        }
+}</span>
+
+// CreateMailboxRequest represents the request body for creating a mailbox
+type CreateMailboxRequest struct {
+        LocalPart string `json:"local_part" validate:"required"`
+        DomainID  uint   `json:"domain_id" validate:"required"`
+}
+
+// CreateRandomMailboxRequest represents the request body for creating a random mailbox
+type CreateRandomMailboxRequest struct {
+        DomainID uint `json:"domain_id" validate:"required"`
+}
+
+// Create handles POST /api/mailboxes
+func (h *MailboxHandler) Create(c echo.Context) error <span class="cov4" title="6">{
+        var req CreateMailboxRequest
+        if err := c.Bind(&amp;req); err != nil </span><span class="cov0" title="0">{
+                return response.BadRequest(c, "invalid request body")
+        }</span>
+
+        <span class="cov4" title="6">if req.LocalPart == "" </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "local_part is required")
+        }</span>
+        <span class="cov4" title="5">if req.DomainID == 0 </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "domain_id is required")
+        }</span>
+
+        // Get domain to verify it exists and is active
+        <span class="cov3" title="4">domain, err := h.domainRepo.GetByID(c.Request().Context(), req.DomainID)
+        if err != nil </span><span class="cov1" title="1">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "domain not found")
+                }</span>
+                <span class="cov0" title="0">return response.InternalError(c, "failed to get domain")</span>
+        }
+
+        <span class="cov3" title="3">if !domain.IsActive </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "domain is not active")
+        }</span>
+
+        <span class="cov2" title="2">mailbox := &amp;models.Mailbox{
+                LocalPart:   req.LocalPart,
+                DomainID:    req.DomainID,
+                FullAddress: req.LocalPart + "@" + domain.Name,
+        }
+
+        if err := h.mailboxRepo.Create(c.Request().Context(), mailbox); err != nil </span><span class="cov1" title="1">{
+                if errors.Is(err, repository.ErrDuplicateEntry) </span><span class="cov1" title="1">{
+                        return response.Conflict(c, "mailbox already exists")
+                }</span>
+                <span class="cov0" title="0">return response.InternalError(c, "failed to create mailbox")</span>
+        }
+
+        <span class="cov1" title="1">return response.Created(c, mailbox)</span>
+}
+
+// CreateRandom handles POST /api/mailboxes/random
+func (h *MailboxHandler) CreateRandom(c echo.Context) error <span class="cov3" title="4">{
+        var req CreateRandomMailboxRequest
+        if err := c.Bind(&amp;req); err != nil </span><span class="cov0" title="0">{
+                return response.BadRequest(c, "invalid request body")
+        }</span>
+
+        <span class="cov3" title="4">if req.DomainID == 0 </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "domain_id is required")
+        }</span>
+
+        // Get domain to verify it exists and is active
+        <span class="cov3" title="3">domain, err := h.domainRepo.GetByID(c.Request().Context(), req.DomainID)
+        if err != nil </span><span class="cov1" title="1">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "domain not found")
+                }</span>
+                <span class="cov0" title="0">return response.InternalError(c, "failed to get domain")</span>
+        }
+
+        <span class="cov2" title="2">if !domain.IsActive </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "domain is not active")
+        }</span>
+
+        // Generate random 8-character alphanumeric local part
+        <span class="cov1" title="1">localPart := generateRandomString(8)
+
+        mailbox := &amp;models.Mailbox{
+                LocalPart:   localPart,
+                DomainID:    req.DomainID,
+                FullAddress: localPart + "@" + domain.Name,
+        }
+
+        if err := h.mailboxRepo.Create(c.Request().Context(), mailbox); err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, repository.ErrDuplicateEntry) </span><span class="cov0" title="0">{
+                        // Extremely rare collision, try again
+                        localPart = generateRandomString(8)
+                        mailbox.LocalPart = localPart
+                        mailbox.FullAddress = localPart + "@" + domain.Name
+                        if err := h.mailboxRepo.Create(c.Request().Context(), mailbox); err != nil </span><span class="cov0" title="0">{
+                                return response.InternalError(c, "failed to create mailbox")
+                        }</span>
+                } else<span class="cov0" title="0"> {
+                        return response.InternalError(c, "failed to create mailbox")
+                }</span>
+        }
+
+        <span class="cov1" title="1">return response.Created(c, mailbox)</span>
+}
+
+// List handles GET /api/mailboxes
+func (h *MailboxHandler) List(c echo.Context) error <span class="cov4" title="5">{
+        domainIDStr := c.QueryParam("domain_id")
+        if domainIDStr == "" </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "domain_id is required")
+        }</span>
+
+        <span class="cov3" title="4">domainID, err := strconv.ParseUint(domainIDStr, 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid domain_id")
+        }</span>
+
+        <span class="cov3" title="3">limit := 20
+        offset := 0
+
+        if l := c.QueryParam("limit"); l != "" </span><span class="cov1" title="1">{
+                if parsed, err := strconv.Atoi(l); err == nil &amp;&amp; parsed &gt; 0 </span><span class="cov1" title="1">{
+                        limit = parsed
+                }</span>
+        }
+        <span class="cov3" title="3">if o := c.QueryParam("offset"); o != "" </span><span class="cov1" title="1">{
+                if parsed, err := strconv.Atoi(o); err == nil &amp;&amp; parsed &gt;= 0 </span><span class="cov1" title="1">{
+                        offset = parsed
+                }</span>
+        }
+
+        <span class="cov3" title="3">mailboxes, total, err := h.mailboxRepo.ListByDomain(c.Request().Context(), uint(domainID), limit, offset)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.InternalError(c, "failed to list mailboxes")
+        }</span>
+
+        <span class="cov2" title="2">return response.Paginated(c, mailboxes, total, limit, offset)</span>
+}
+
+// Get handles GET /api/mailboxes/:id
+func (h *MailboxHandler) Get(c echo.Context) error <span class="cov3" title="4">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid mailbox ID")
+        }</span>
+
+        <span class="cov3" title="3">mailbox, err := h.mailboxRepo.GetByID(c.Request().Context(), uint(id))
+        if err != nil </span><span class="cov1" title="1">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "mailbox not found")
+                }</span>
+                <span class="cov0" title="0">return response.InternalError(c, "failed to get mailbox")</span>
+        }
+
+        // Update last accessed timestamp
+        <span class="cov2" title="2">_ = h.mailboxRepo.UpdateLastAccessed(c.Request().Context(), uint(id))
+
+        return response.Success(c, mailbox)</span>
+}
+
+// Delete handles DELETE /api/mailboxes/:id
+func (h *MailboxHandler) Delete(c echo.Context) error <span class="cov3" title="4">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid mailbox ID")
+        }</span>
+
+        <span class="cov3" title="3">if err := h.mailboxRepo.Delete(c.Request().Context(), uint(id)); err != nil </span><span class="cov2" title="2">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "mailbox not found")
+                }</span>
+                <span class="cov1" title="1">return response.InternalError(c, "failed to delete mailbox")</span>
+        }
+
+        <span class="cov1" title="1">return response.NoContent(c)</span>
+}
+
+// generateRandomString generates a random alphanumeric string of given length
+func generateRandomString(length int) string <span class="cov5" title="11">{
+        const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+        result := make([]byte, length)
+        for i := range result </span><span class="cov10" title="88">{
+                n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+                result[i] = charset[n.Int64()]
+        }</span>
+        <span class="cov5" title="11">return string(result)</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package handlers
+
+import (
+        "errors"
+        "strconv"
+
+        "github.com/labstack/echo/v4"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/api/response"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+)
+
+// MessageHandler handles message-related HTTP requests
+type MessageHandler struct {
+        messageRepo repository.MessageRepository
+        mailboxRepo repository.MailboxRepository
+}
+
+// NewMessageHandler creates a new MessageHandler
+func NewMessageHandler(messageRepo repository.MessageRepository, mailboxRepo repository.MailboxRepository) *MessageHandler <span class="cov10" title="19">{
+        return &amp;MessageHandler{
+                messageRepo: messageRepo,
+                mailboxRepo: mailboxRepo,
+        }
+}</span>
+
+// List handles GET /api/mailboxes/:mailbox_id/messages
+func (h *MessageHandler) List(c echo.Context) error <span class="cov5" title="5">{
+        mailboxID, err := strconv.ParseUint(c.Param("mailbox_id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid mailbox ID")
+        }</span>
+
+        // Verify mailbox exists
+        <span class="cov5" title="4">_, err = h.mailboxRepo.GetByID(c.Request().Context(), uint(mailboxID))
+        if err != nil </span><span class="cov1" title="1">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "mailbox not found")
+                }</span>
+                <span class="cov0" title="0">return response.InternalError(c, "failed to get mailbox")</span>
+        }
+
+        <span class="cov4" title="3">limit := 20
+        offset := 0
+
+        if l := c.QueryParam("limit"); l != "" </span><span class="cov1" title="1">{
+                if parsed, err := strconv.Atoi(l); err == nil &amp;&amp; parsed &gt; 0 </span><span class="cov1" title="1">{
+                        limit = parsed
+                }</span>
+        }
+        <span class="cov4" title="3">if o := c.QueryParam("offset"); o != "" </span><span class="cov1" title="1">{
+                if parsed, err := strconv.Atoi(o); err == nil &amp;&amp; parsed &gt;= 0 </span><span class="cov1" title="1">{
+                        offset = parsed
+                }</span>
+        }
+
+        <span class="cov4" title="3">messages, total, err := h.messageRepo.ListByMailbox(c.Request().Context(), uint(mailboxID), limit, offset)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.InternalError(c, "failed to list messages")
+        }</span>
+
+        <span class="cov3" title="2">return response.Paginated(c, messages, total, limit, offset)</span>
+}
+
+// Get handles GET /api/messages/:id
+func (h *MessageHandler) Get(c echo.Context) error <span class="cov6" title="6">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid message ID")
+        }</span>
+
+        <span class="cov5" title="5">message, err := h.messageRepo.GetByID(c.Request().Context(), uint(id))
+        if err != nil </span><span class="cov3" title="2">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "message not found")
+                }</span>
+                <span class="cov1" title="1">return response.InternalError(c, "failed to get message")</span>
+        }
+
+        // Auto mark as read
+        <span class="cov4" title="3">if !message.IsRead </span><span class="cov1" title="1">{
+                _ = h.messageRepo.MarkAsRead(c.Request().Context(), uint(id))
+                message.IsRead = true
+        }</span>
+
+        <span class="cov4" title="3">return response.Success(c, message)</span>
+}
+
+// MarkAsRead handles PATCH /api/messages/:id/read
+func (h *MessageHandler) MarkAsRead(c echo.Context) error <span class="cov5" title="4">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid message ID")
+        }</span>
+
+        <span class="cov4" title="3">if err := h.messageRepo.MarkAsRead(c.Request().Context(), uint(id)); err != nil </span><span class="cov3" title="2">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "message not found")
+                }</span>
+                <span class="cov1" title="1">return response.InternalError(c, "failed to mark message as read")</span>
+        }
+
+        <span class="cov1" title="1">return response.SuccessWithMessage(c, nil, "message marked as read")</span>
+}
+
+// Delete handles DELETE /api/messages/:id
+func (h *MessageHandler) Delete(c echo.Context) error <span class="cov5" title="4">{
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil </span><span class="cov1" title="1">{
+                return response.BadRequest(c, "invalid message ID")
+        }</span>
+
+        <span class="cov4" title="3">if err := h.messageRepo.Delete(c.Request().Context(), uint(id)); err != nil </span><span class="cov3" title="2">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov1" title="1">{
+                        return response.NotFound(c, "message not found")
+                }</span>
+                <span class="cov1" title="1">return response.InternalError(c, "failed to delete message")</span>
+        }
+
+        <span class="cov1" title="1">return response.NoContent(c)</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package middleware
+
+import (
+        "log/slog"
+        "time"
+
+        "github.com/labstack/echo/v4"
+        "github.com/labstack/echo/v4/middleware"
+)
+
+// RequestLogger returns a middleware that logs HTTP requests
+func RequestLogger(logger *slog.Logger) echo.MiddlewareFunc <span class="cov0" title="0">{
+        return func(next echo.HandlerFunc) echo.HandlerFunc </span><span class="cov0" title="0">{
+                return func(c echo.Context) error </span><span class="cov0" title="0">{
+                        start := time.Now()
+
+                        err := next(c)
+
+                        req := c.Request()
+                        res := c.Response()
+
+                        logger.Info("request",
+                                slog.String("method", req.Method),
+                                slog.String("path", req.URL.Path),
+                                slog.Int("status", res.Status),
+                                slog.Duration("latency", time.Since(start)),
+                                slog.String("remote_ip", c.RealIP()),
+                        )
+
+                        return err
+                }</span>
+        }
+}
+
+// CORS returns a CORS middleware with default configuration
+func CORS() echo.MiddlewareFunc <span class="cov0" title="0">{
+        return middleware.CORSWithConfig(middleware.CORSConfig{
+                AllowOrigins: []string{"*"},
+                AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.PATCH, echo.DELETE, echo.OPTIONS},
+                AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+        })
+}</span>
+
+// Recover returns a middleware that recovers from panics
+func Recover() echo.MiddlewareFunc <span class="cov0" title="0">{
+        return middleware.Recover()
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package response
+
+import (
+        "net/http"
+
+        apperrors "github.com/welldanyogia/webrana-infinimail-backend/internal/errors"
+        "github.com/labstack/echo/v4"
+)
+
+// APIResponse represents a standard API response
+type APIResponse struct {
+        Success bool        `json:"success"`
+        Data    interface{} `json:"data,omitempty"`
+        Message string      `json:"message,omitempty"`
+}
+
+// ErrorResponse represents an error API response
+type ErrorResponse struct {
+        Success bool   `json:"success"`
+        Error   string `json:"error"`
+        Code    string `json:"code,omitempty"`
+}
+
+// PaginatedResponse represents a paginated API response
+type PaginatedResponse struct {
+        Success bool        `json:"success"`
+        Data    interface{} `json:"data"`
+        Meta    Meta        `json:"meta"`
+}
+
+// Meta contains pagination metadata
+type Meta struct {
+        Total  int64 `json:"total"`
+        Limit  int   `json:"limit"`
+        Offset int   `json:"offset"`
+}
+
+// Success returns a successful response with data
+func Success(c echo.Context, data interface{}) error <span class="cov0" title="0">{
+        return c.JSON(http.StatusOK, APIResponse{
+                Success: true,
+                Data:    data,
+        })
+}</span>
+
+// SuccessWithMessage returns a successful response with a message
+func SuccessWithMessage(c echo.Context, data interface{}, message string) error <span class="cov0" title="0">{
+        return c.JSON(http.StatusOK, APIResponse{
+                Success: true,
+                Data:    data,
+                Message: message,
+        })
+}</span>
+
+// Created returns a 201 Created response
+func Created(c echo.Context, data interface{}) error <span class="cov0" title="0">{
+        return c.JSON(http.StatusCreated, APIResponse{
+                Success: true,
+                Data:    data,
+        })
+}</span>
+
+// NoContent returns a 204 No Content response
+func NoContent(c echo.Context) error <span class="cov0" title="0">{
+        return c.NoContent(http.StatusNoContent)
+}</span>
+
+// Paginated returns a paginated response
+func Paginated(c echo.Context, data interface{}, total int64, limit, offset int) error <span class="cov0" title="0">{
+        return c.JSON(http.StatusOK, PaginatedResponse{
+                Success: true,
+                Data:    data,
+                Meta: Meta{
+                        Total:  total,
+                        Limit:  limit,
+                        Offset: offset,
+                },
+        })
+}</span>
+
+// Error returns an error response with appropriate status code
+func Error(c echo.Context, err error) error <span class="cov0" title="0">{
+        code := apperrors.GetErrorCode(err)
+        status := getHTTPStatus(code)
+        
+        return c.JSON(status, ErrorResponse{
+                Success: false,
+                Error:   err.Error(),
+                Code:    code,
+        })
+}</span>
+
+// BadRequest returns a 400 Bad Request response
+func BadRequest(c echo.Context, message string) error <span class="cov0" title="0">{
+        return c.JSON(http.StatusBadRequest, ErrorResponse{
+                Success: false,
+                Error:   message,
+                Code:    apperrors.CodeInvalidInput,
+        })
+}</span>
+
+// NotFound returns a 404 Not Found response
+func NotFound(c echo.Context, message string) error <span class="cov0" title="0">{
+        return c.JSON(http.StatusNotFound, ErrorResponse{
+                Success: false,
+                Error:   message,
+                Code:    apperrors.CodeNotFound,
+        })
+}</span>
+
+// Conflict returns a 409 Conflict response
+func Conflict(c echo.Context, message string) error <span class="cov0" title="0">{
+        return c.JSON(http.StatusConflict, ErrorResponse{
+                Success: false,
+                Error:   message,
+                Code:    apperrors.CodeDuplicateEntry,
+        })
+}</span>
+
+// InternalError returns a 500 Internal Server Error response
+func InternalError(c echo.Context, message string) error <span class="cov0" title="0">{
+        return c.JSON(http.StatusInternalServerError, ErrorResponse{
+                Success: false,
+                Error:   message,
+                Code:    apperrors.CodeInternalError,
+        })
+}</span>
+
+// getHTTPStatus maps error codes to HTTP status codes
+func getHTTPStatus(code string) int <span class="cov0" title="0">{
+        switch code </span>{
+        case apperrors.CodeNotFound:<span class="cov0" title="0">
+                return http.StatusNotFound</span>
+        case apperrors.CodeDuplicateEntry:<span class="cov0" title="0">
+                return http.StatusConflict</span>
+        case apperrors.CodeInvalidInput:<span class="cov0" title="0">
+                return http.StatusBadRequest</span>
+        case apperrors.CodeDomainNotActive:<span class="cov0" title="0">
+                return http.StatusBadRequest</span>
+        case apperrors.CodeUnauthorized:<span class="cov0" title="0">
+                return http.StatusUnauthorized</span>
+        case apperrors.CodeForbidden:<span class="cov0" title="0">
+                return http.StatusForbidden</span>
+        default:<span class="cov0" title="0">
+                return http.StatusInternalServerError</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package api
+
+import (
+        "log/slog"
+
+        "github.com/labstack/echo/v4"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/api/handlers"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/api/middleware"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/storage"
+        "gorm.io/gorm"
+)
+
+// RouterConfig holds dependencies for the router
+type RouterConfig struct {
+        DB          *gorm.DB
+        FileStorage storage.FileStorage
+        Logger      *slog.Logger
+}
+
+// NewRouter creates and configures the Echo router with all routes
+func NewRouter(cfg *RouterConfig) *echo.Echo <span class="cov0" title="0">{
+        e := echo.New()
+        e.HideBanner = true
+
+        // Middleware
+        e.Use(middleware.Recover())
+        e.Use(middleware.CORS())
+        if cfg.Logger != nil </span><span class="cov0" title="0">{
+                e.Use(middleware.RequestLogger(cfg.Logger))
+        }</span>
+
+        // Initialize repositories
+        <span class="cov0" title="0">domainRepo := repository.NewDomainRepository(cfg.DB)
+        mailboxRepo := repository.NewMailboxRepository(cfg.DB)
+        messageRepo := repository.NewMessageRepository(cfg.DB)
+        attachmentRepo := repository.NewAttachmentRepository(cfg.DB, cfg.FileStorage)
+
+        // Initialize handlers
+        healthHandler := handlers.NewHealthHandler(cfg.DB)
+        domainHandler := handlers.NewDomainHandler(domainRepo)
+        mailboxHandler := handlers.NewMailboxHandler(mailboxRepo, domainRepo)
+        messageHandler := handlers.NewMessageHandler(messageRepo, mailboxRepo)
+        attachmentHandler := handlers.NewAttachmentHandler(attachmentRepo, messageRepo, cfg.FileStorage)
+
+        // Health routes
+        e.GET("/health", healthHandler.Health)
+        e.GET("/ready", healthHandler.Ready)
+
+        // API routes
+        api := e.Group("/api")
+
+        // Domain routes
+        domains := api.Group("/domains")
+        domains.POST("", domainHandler.Create)
+        domains.GET("", domainHandler.List)
+        domains.GET("/:id", domainHandler.Get)
+        domains.PUT("/:id", domainHandler.Update)
+        domains.DELETE("/:id", domainHandler.Delete)
+
+        // Mailbox routes
+        mailboxes := api.Group("/mailboxes")
+        mailboxes.POST("", mailboxHandler.Create)
+        mailboxes.POST("/random", mailboxHandler.CreateRandom)
+        mailboxes.GET("", mailboxHandler.List)
+        mailboxes.GET("/:id", mailboxHandler.Get)
+        mailboxes.DELETE("/:id", mailboxHandler.Delete)
+
+        // Message routes (nested under mailboxes)
+        mailboxes.GET("/:mailbox_id/messages", messageHandler.List)
+
+        // Message routes (standalone)
+        messages := api.Group("/messages")
+        messages.GET("/:id", messageHandler.Get)
+        messages.PATCH("/:id/read", messageHandler.MarkAsRead)
+        messages.DELETE("/:id", messageHandler.Delete)
+
+        // Attachment routes (nested under messages)
+        messages.GET("/:message_id/attachments", attachmentHandler.List)
+
+        // Attachment routes (standalone)
+        attachments := api.Group("/attachments")
+        attachments.GET("/:id", attachmentHandler.Get)
+        attachments.GET("/:id/download", attachmentHandler.Download)
+
+        return e</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package config
+
+import (
+        "fmt"
+        "os"
+        "strconv"
+)
+
+// Config holds all configuration for the application
+type Config struct {
+        // Database
+        DatabaseURL string
+
+        // Server ports
+        APIPort  int
+        SMTPPort int
+
+        // Features
+        AutoProvisioningEnabled bool
+
+        // Storage
+        AttachmentStoragePath string
+
+        // Logging
+        LogLevel string
+}
+
+// Load reads configuration from environment variables
+func Load() (*Config, error) <span class="cov0" title="0">{
+        cfg := &amp;Config{}
+
+        // Required: DATABASE_URL
+        cfg.DatabaseURL = os.Getenv("DATABASE_URL")
+        if cfg.DatabaseURL == "" </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("DATABASE_URL is required but not set")
+        }</span>
+
+        // API_PORT (default: 8080)
+        <span class="cov0" title="0">apiPort := os.Getenv("API_PORT")
+        if apiPort == "" </span><span class="cov0" title="0">{
+                cfg.APIPort = 8080
+        }</span> else<span class="cov0" title="0"> {
+                port, err := strconv.Atoi(apiPort)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("API_PORT must be a valid integer: %w", err)
+                }</span>
+                <span class="cov0" title="0">cfg.APIPort = port</span>
+        }
+
+        // SMTP_PORT (default: 2525)
+        <span class="cov0" title="0">smtpPort := os.Getenv("SMTP_PORT")
+        if smtpPort == "" </span><span class="cov0" title="0">{
+                cfg.SMTPPort = 2525
+        }</span> else<span class="cov0" title="0"> {
+                port, err := strconv.Atoi(smtpPort)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("SMTP_PORT must be a valid integer: %w", err)
+                }</span>
+                <span class="cov0" title="0">cfg.SMTPPort = port</span>
+        }
+
+        // AUTO_PROVISIONING_ENABLED (default: true)
+        <span class="cov0" title="0">autoProvisioning := os.Getenv("AUTO_PROVISIONING_ENABLED")
+        if autoProvisioning == "" </span><span class="cov0" title="0">{
+                cfg.AutoProvisioningEnabled = true
+        }</span> else<span class="cov0" title="0"> {
+                enabled, err := strconv.ParseBool(autoProvisioning)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("AUTO_PROVISIONING_ENABLED must be a valid boolean: %w", err)
+                }</span>
+                <span class="cov0" title="0">cfg.AutoProvisioningEnabled = enabled</span>
+        }
+
+        // ATTACHMENT_STORAGE_PATH (default: ./attachments)
+        <span class="cov0" title="0">cfg.AttachmentStoragePath = os.Getenv("ATTACHMENT_STORAGE_PATH")
+        if cfg.AttachmentStoragePath == "" </span><span class="cov0" title="0">{
+                cfg.AttachmentStoragePath = "./attachments"
+        }</span>
+
+        // LOG_LEVEL (default: info)
+        <span class="cov0" title="0">cfg.LogLevel = os.Getenv("LOG_LEVEL")
+        if cfg.LogLevel == "" </span><span class="cov0" title="0">{
+                cfg.LogLevel = "info"
+        }</span>
+
+        <span class="cov0" title="0">return cfg, nil</span>
+}
+
+// Validate checks if the configuration is valid
+func (c *Config) Validate() error <span class="cov0" title="0">{
+        if c.DatabaseURL == "" </span><span class="cov0" title="0">{
+                return fmt.Errorf("DatabaseURL cannot be empty")
+        }</span>
+        <span class="cov0" title="0">if c.APIPort &lt;= 0 || c.APIPort &gt; 65535 </span><span class="cov0" title="0">{
+                return fmt.Errorf("APIPort must be between 1 and 65535")
+        }</span>
+        <span class="cov0" title="0">if c.SMTPPort &lt;= 0 || c.SMTPPort &gt; 65535 </span><span class="cov0" title="0">{
+                return fmt.Errorf("SMTPPort must be between 1 and 65535")
+        }</span>
+        <span class="cov0" title="0">if c.AttachmentStoragePath == "" </span><span class="cov0" title="0">{
+                return fmt.Errorf("AttachmentStoragePath cannot be empty")
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package database
+
+import (
+        "fmt"
+        "log/slog"
+
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+        "gorm.io/driver/postgres"
+        "gorm.io/gorm"
+        "gorm.io/gorm/logger"
+)
+
+// Connect establishes a connection to the PostgreSQL database
+func Connect(databaseURL string) (*gorm.DB, error) <span class="cov0" title="0">{
+        db, err := gorm.Open(postgres.Open(databaseURL), &amp;gorm.Config{
+                Logger: logger.Default.LogMode(logger.Info),
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to connect to database: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">slog.Info("Connected to database successfully")
+        return db, nil</span>
+}
+
+// Migrate runs auto-migration for all models
+func Migrate(db *gorm.DB) error <span class="cov0" title="0">{
+        slog.Info("Running database migrations...")
+
+        err := db.AutoMigrate(
+                &amp;models.Domain{},
+                &amp;models.Mailbox{},
+                &amp;models.Message{},
+                &amp;models.Attachment{},
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to run migrations: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">slog.Info("Database migrations completed successfully")
+        return nil</span>
+}
+
+// Close closes the database connection
+func Close(db *gorm.DB) error <span class="cov0" title="0">{
+        sqlDB, err := db.DB()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+        }</span>
+        <span class="cov0" title="0">return sqlDB.Close()</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package errors
+
+import (
+        "errors"
+        "fmt"
+)
+
+// Domain-specific error types
+var (
+        // ErrNotFound indicates a resource was not found
+        ErrNotFound = errors.New("resource not found")
+
+        // ErrDuplicateEntry indicates a unique constraint violation
+        ErrDuplicateEntry = errors.New("duplicate entry")
+
+        // ErrInvalidInput indicates invalid input data
+        ErrInvalidInput = errors.New("invalid input")
+
+        // ErrDomainNotActive indicates the domain is not active
+        ErrDomainNotActive = errors.New("domain is not active")
+
+        // ErrMailboxNotFound indicates the mailbox was not found
+        ErrMailboxNotFound = errors.New("mailbox not found")
+
+        // ErrMessageNotFound indicates the message was not found
+        ErrMessageNotFound = errors.New("message not found")
+
+        // ErrAttachmentNotFound indicates the attachment was not found
+        ErrAttachmentNotFound = errors.New("attachment not found")
+
+        // ErrDomainNotFound indicates the domain was not found
+        ErrDomainNotFound = errors.New("domain not found")
+
+        // ErrUnauthorized indicates unauthorized access
+        ErrUnauthorized = errors.New("unauthorized")
+
+        // ErrForbidden indicates forbidden access
+        ErrForbidden = errors.New("forbidden")
+
+        // ErrInternal indicates an internal server error
+        ErrInternal = errors.New("internal server error")
+)
+
+// Error codes for API responses
+const (
+        CodeNotFound       = "NOT_FOUND"
+        CodeDuplicateEntry = "DUPLICATE_ENTRY"
+        CodeInvalidInput   = "INVALID_INPUT"
+        CodeDomainNotActive = "DOMAIN_NOT_ACTIVE"
+        CodeUnauthorized   = "UNAUTHORIZED"
+        CodeForbidden      = "FORBIDDEN"
+        CodeInternalError  = "INTERNAL_ERROR"
+)
+
+// AppError represents an application error with context
+type AppError struct {
+        Err     error
+        Message string
+        Code    string
+}
+
+// Error implements the error interface
+func (e *AppError) Error() string <span class="cov0" title="0">{
+        if e.Message != "" </span><span class="cov0" title="0">{
+                return e.Message
+        }</span>
+        <span class="cov0" title="0">return e.Err.Error()</span>
+}
+
+// Unwrap returns the underlying error
+func (e *AppError) Unwrap() error <span class="cov0" title="0">{
+        return e.Err
+}</span>
+
+// NewAppError creates a new AppError
+func NewAppError(err error, message string, code string) *AppError <span class="cov0" title="0">{
+        return &amp;AppError{
+                Err:     err,
+                Message: message,
+                Code:    code,
+        }
+}</span>
+
+// Wrap wraps an error with additional context
+func Wrap(err error, message string) error <span class="cov0" title="0">{
+        if err == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">return fmt.Errorf("%s: %w", message, err)</span>
+}
+
+// IsNotFound checks if the error is a not found error
+func IsNotFound(err error) bool <span class="cov0" title="0">{
+        return errors.Is(err, ErrNotFound) ||
+                errors.Is(err, ErrMailboxNotFound) ||
+                errors.Is(err, ErrMessageNotFound) ||
+                errors.Is(err, ErrAttachmentNotFound) ||
+                errors.Is(err, ErrDomainNotFound)
+}</span>
+
+// IsDuplicateEntry checks if the error is a duplicate entry error
+func IsDuplicateEntry(err error) bool <span class="cov0" title="0">{
+        return errors.Is(err, ErrDuplicateEntry)
+}</span>
+
+// IsInvalidInput checks if the error is an invalid input error
+func IsInvalidInput(err error) bool <span class="cov0" title="0">{
+        return errors.Is(err, ErrInvalidInput)
+}</span>
+
+// IsDomainNotActive checks if the error is a domain not active error
+func IsDomainNotActive(err error) bool <span class="cov0" title="0">{
+        return errors.Is(err, ErrDomainNotActive)
+}</span>
+
+// GetErrorCode returns the appropriate error code for an error
+func GetErrorCode(err error) string <span class="cov0" title="0">{
+        switch </span>{
+        case IsNotFound(err):<span class="cov0" title="0">
+                return CodeNotFound</span>
+        case IsDuplicateEntry(err):<span class="cov0" title="0">
+                return CodeDuplicateEntry</span>
+        case IsInvalidInput(err):<span class="cov0" title="0">
+                return CodeInvalidInput</span>
+        case IsDomainNotActive(err):<span class="cov0" title="0">
+                return CodeDomainNotActive</span>
+        case errors.Is(err, ErrUnauthorized):<span class="cov0" title="0">
+                return CodeUnauthorized</span>
+        case errors.Is(err, ErrForbidden):<span class="cov0" title="0">
+                return CodeForbidden</span>
+        default:<span class="cov0" title="0">
+                return CodeInternalError</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package models
+
+// Attachment represents a file attached to an email message
+type Attachment struct {
+        ID          uint   `gorm:"primaryKey" json:"id"`
+        MessageID   uint   `gorm:"not null;index" json:"message_id"`
+        Filename    string `gorm:"size:255" json:"filename"`
+        ContentType string `gorm:"size:100" json:"content_type"`
+        FilePath    string `gorm:"size:500" json:"file_path"`
+        SizeBytes   int64  `json:"size_bytes"`
+
+        // Relationships
+        Message Message `gorm:"foreignKey:MessageID;constraint:OnDelete:CASCADE" json:"-"`
+}
+
+// TableName returns the table name for Attachment
+func (Attachment) TableName() string <span class="cov0" title="0">{
+        return "attachments"
+}</span>
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package models
+
+import (
+        "time"
+)
+
+// Domain represents an email domain that the system handles
+type Domain struct {
+        ID        uint      `gorm:"primaryKey" json:"id"`
+        Name      string    `gorm:"uniqueIndex;not null;size:255" json:"name"`
+        IsActive  bool      `gorm:"default:true" json:"is_active"`
+        CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+        UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+
+        // Relationships
+        Mailboxes []Mailbox `gorm:"foreignKey:DomainID;constraint:OnDelete:CASCADE" json:"-"`
+}
+
+// TableName returns the table name for Domain
+func (Domain) TableName() string <span class="cov0" title="0">{
+        return "domains"
+}</span>
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package models
+
+import (
+        "time"
+)
+
+// Mailbox represents an email address within a domain
+type Mailbox struct {
+        ID             uint       `gorm:"primaryKey" json:"id"`
+        LocalPart      string     `gorm:"not null;size:255" json:"local_part"`
+        DomainID       uint       `gorm:"not null;index" json:"domain_id"`
+        FullAddress    string     `gorm:"uniqueIndex;not null;size:255" json:"full_address"`
+        CreatedAt      time.Time  `gorm:"autoCreateTime" json:"created_at"`
+        LastAccessedAt *time.Time `json:"last_accessed_at,omitempty"`
+
+        // Relationships
+        Domain   Domain    `gorm:"foreignKey:DomainID;constraint:OnDelete:CASCADE" json:"-"`
+        Messages []Message `gorm:"foreignKey:MailboxID;constraint:OnDelete:CASCADE" json:"-"`
+}
+
+// TableName returns the table name for Mailbox
+func (Mailbox) TableName() string <span class="cov0" title="0">{
+        return "mailboxes"
+}</span>
+
+// MailboxWithUnreadCount is used for API responses that include unread count
+type MailboxWithUnreadCount struct {
+        Mailbox
+        UnreadCount int64 `json:"unread_count"`
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package models
+
+import (
+        "time"
+)
+
+// Message represents an email message received by a mailbox
+type Message struct {
+        ID          uint      `gorm:"primaryKey" json:"id"`
+        MailboxID   uint      `gorm:"not null;index" json:"mailbox_id"`
+        SenderEmail string    `gorm:"not null;size:255" json:"sender_email"`
+        SenderName  string    `gorm:"size:255" json:"sender_name,omitempty"`
+        Subject     string    `json:"subject,omitempty"`
+        Snippet     string    `gorm:"size:255" json:"snippet,omitempty"`
+        BodyText    string    `json:"body_text,omitempty"`
+        BodyHTML    string    `json:"body_html,omitempty"`
+        IsRead      bool      `gorm:"default:false" json:"is_read"`
+        ReceivedAt  time.Time `gorm:"autoCreateTime" json:"received_at"`
+
+        // Relationships
+        Mailbox     Mailbox      `gorm:"foreignKey:MailboxID;constraint:OnDelete:CASCADE" json:"-"`
+        Attachments []Attachment `gorm:"foreignKey:MessageID;constraint:OnDelete:CASCADE" json:"attachments,omitempty"`
+}
+
+// TableName returns the table name for Message
+func (Message) TableName() string <span class="cov0" title="0">{
+        return "messages"
+}</span>
+
+// MessageListItem is a lightweight version for list views
+type MessageListItem struct {
+        ID              uint      `json:"id"`
+        MailboxID       uint      `json:"mailbox_id"`
+        SenderEmail     string    `json:"sender_email"`
+        SenderName      string    `json:"sender_name,omitempty"`
+        Subject         string    `json:"subject,omitempty"`
+        Snippet         string    `json:"snippet,omitempty"`
+        IsRead          bool      `json:"is_read"`
+        ReceivedAt      time.Time `json:"received_at"`
+        AttachmentCount int       `json:"attachment_count"`
+}
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package repository
+
+import (
+        "context"
+        "errors"
+        "fmt"
+
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/storage"
+        "gorm.io/gorm"
+)
+
+// AttachmentRepository defines the interface for attachment data access
+type AttachmentRepository interface {
+        Create(ctx context.Context, attachment *models.Attachment) error
+        GetByID(ctx context.Context, id uint) (*models.Attachment, error)
+        ListByMessage(ctx context.Context, messageID uint) ([]models.Attachment, error)
+        Delete(ctx context.Context, id uint) error
+}
+
+// attachmentRepository implements AttachmentRepository using GORM
+type attachmentRepository struct {
+        db          *gorm.DB
+        fileStorage storage.FileStorage
+}
+
+// NewAttachmentRepository creates a new AttachmentRepository instance
+func NewAttachmentRepository(db *gorm.DB, fileStorage storage.FileStorage) AttachmentRepository <span class="cov0" title="0">{
+        return &amp;attachmentRepository{
+                db:          db,
+                fileStorage: fileStorage,
+        }
+}</span>
+
+// Create creates a new attachment record
+func (r *attachmentRepository) Create(ctx context.Context, attachment *models.Attachment) error <span class="cov0" title="0">{
+        result := r.db.WithContext(ctx).Create(attachment)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create attachment: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// GetByID retrieves an attachment by its ID
+func (r *attachmentRepository) GetByID(ctx context.Context, id uint) (*models.Attachment, error) <span class="cov0" title="0">{
+        var attachment models.Attachment
+        result := r.db.WithContext(ctx).First(&amp;attachment, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if errors.Is(result.Error, gorm.ErrRecordNotFound) </span><span class="cov0" title="0">{
+                        return nil, ErrNotFound
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("failed to get attachment by ID: %w", result.Error)</span>
+        }
+        <span class="cov0" title="0">return &amp;attachment, nil</span>
+}
+
+// ListByMessage retrieves all attachments for a message
+func (r *attachmentRepository) ListByMessage(ctx context.Context, messageID uint) ([]models.Attachment, error) <span class="cov0" title="0">{
+        var attachments []models.Attachment
+        result := r.db.WithContext(ctx).Where("message_id = ?", messageID).Find(&amp;attachments)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to list attachments: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">return attachments, nil</span>
+}
+
+// Delete deletes an attachment by its ID and removes the associated file
+func (r *attachmentRepository) Delete(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        // Get attachment first to get file path
+        attachment, err := r.GetByID(ctx, id)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Delete from database
+        <span class="cov0" title="0">result := r.db.WithContext(ctx).Delete(&amp;models.Attachment{}, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to delete attachment: %w", result.Error)
+        }</span>
+
+        // Delete associated file (ignore errors as file might already be deleted)
+        <span class="cov0" title="0">if attachment.FilePath != "" &amp;&amp; r.fileStorage != nil </span><span class="cov0" title="0">{
+                _ = r.fileStorage.Delete(attachment.FilePath)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package repository
+
+import (
+        "context"
+        "errors"
+        "fmt"
+
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+        "gorm.io/gorm"
+)
+
+// DomainRepository defines the interface for domain data access
+type DomainRepository interface {
+        Create(ctx context.Context, domain *models.Domain) error
+        GetByID(ctx context.Context, id uint) (*models.Domain, error)
+        GetByName(ctx context.Context, name string) (*models.Domain, error)
+        List(ctx context.Context, activeOnly bool) ([]models.Domain, error)
+        Update(ctx context.Context, domain *models.Domain) error
+        Delete(ctx context.Context, id uint) error
+}
+
+// domainRepository implements DomainRepository using GORM
+type domainRepository struct {
+        db *gorm.DB
+}
+
+// NewDomainRepository creates a new DomainRepository instance
+func NewDomainRepository(db *gorm.DB) DomainRepository <span class="cov0" title="0">{
+        return &amp;domainRepository{db: db}
+}</span>
+
+// Create creates a new domain
+func (r *domainRepository) Create(ctx context.Context, domain *models.Domain) error <span class="cov0" title="0">{
+        result := r.db.WithContext(ctx).Create(domain)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if isDuplicateKeyError(result.Error) </span><span class="cov0" title="0">{
+                        return fmt.Errorf("domain with name '%s' already exists: %w", domain.Name, ErrDuplicateEntry)
+                }</span>
+                <span class="cov0" title="0">return fmt.Errorf("failed to create domain: %w", result.Error)</span>
+        }
+        <span class="cov0" title="0">return nil</span>
+}
+
+// GetByID retrieves a domain by its ID
+func (r *domainRepository) GetByID(ctx context.Context, id uint) (*models.Domain, error) <span class="cov0" title="0">{
+        var domain models.Domain
+        result := r.db.WithContext(ctx).First(&amp;domain, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if errors.Is(result.Error, gorm.ErrRecordNotFound) </span><span class="cov0" title="0">{
+                        return nil, ErrNotFound
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("failed to get domain by ID: %w", result.Error)</span>
+        }
+        <span class="cov0" title="0">return &amp;domain, nil</span>
+}
+
+// GetByName retrieves a domain by its name
+func (r *domainRepository) GetByName(ctx context.Context, name string) (*models.Domain, error) <span class="cov0" title="0">{
+        var domain models.Domain
+        result := r.db.WithContext(ctx).Where("name = ?", name).First(&amp;domain)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if errors.Is(result.Error, gorm.ErrRecordNotFound) </span><span class="cov0" title="0">{
+                        return nil, ErrNotFound
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("failed to get domain by name: %w", result.Error)</span>
+        }
+        <span class="cov0" title="0">return &amp;domain, nil</span>
+}
+
+// List retrieves all domains, optionally filtering by active status
+func (r *domainRepository) List(ctx context.Context, activeOnly bool) ([]models.Domain, error) <span class="cov0" title="0">{
+        var domains []models.Domain
+        query := r.db.WithContext(ctx)
+        
+        if activeOnly </span><span class="cov0" title="0">{
+                query = query.Where("is_active = ?", true)
+        }</span>
+        
+        <span class="cov0" title="0">result := query.Order("name ASC").Find(&amp;domains)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to list domains: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">return domains, nil</span>
+}
+
+// Update updates an existing domain
+func (r *domainRepository) Update(ctx context.Context, domain *models.Domain) error <span class="cov0" title="0">{
+        result := r.db.WithContext(ctx).Save(domain)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if isDuplicateKeyError(result.Error) </span><span class="cov0" title="0">{
+                        return fmt.Errorf("domain with name '%s' already exists: %w", domain.Name, ErrDuplicateEntry)
+                }</span>
+                <span class="cov0" title="0">return fmt.Errorf("failed to update domain: %w", result.Error)</span>
+        }
+        <span class="cov0" title="0">if result.RowsAffected == 0 </span><span class="cov0" title="0">{
+                return ErrNotFound
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Delete deletes a domain by its ID (cascade deletes mailboxes, messages, attachments)
+func (r *domainRepository) Delete(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        result := r.db.WithContext(ctx).Delete(&amp;models.Domain{}, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to delete domain: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">if result.RowsAffected == 0 </span><span class="cov0" title="0">{
+                return ErrNotFound
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file18" style="display: none">package repository
+
+import (
+        "errors"
+        "strings"
+)
+
+// Common repository errors
+var (
+        ErrNotFound       = errors.New("record not found")
+        ErrDuplicateEntry = errors.New("duplicate entry")
+        ErrInvalidInput   = errors.New("invalid input")
+)
+
+// isDuplicateKeyError checks if the error is a duplicate key violation
+func isDuplicateKeyError(err error) bool <span class="cov0" title="0">{
+        if err == nil </span><span class="cov0" title="0">{
+                return false
+        }</span>
+        <span class="cov0" title="0">errStr := err.Error()
+        return strings.Contains(errStr, "duplicate key") ||
+                strings.Contains(errStr, "UNIQUE constraint") ||
+                strings.Contains(errStr, "23505")</span> // PostgreSQL unique violation code
+}
+</pre>
+		
+		<pre class="file" id="file19" style="display: none">package repository
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "time"
+
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+        "gorm.io/gorm"
+)
+
+// MailboxRepository defines the interface for mailbox data access
+type MailboxRepository interface {
+        Create(ctx context.Context, mailbox *models.Mailbox) error
+        GetByID(ctx context.Context, id uint) (*models.Mailbox, error)
+        GetByAddress(ctx context.Context, fullAddress string) (*models.Mailbox, error)
+        GetOrCreate(ctx context.Context, localPart string, domainID uint, domainName string) (*models.Mailbox, bool, error)
+        ListByDomain(ctx context.Context, domainID uint, limit, offset int) ([]models.MailboxWithUnreadCount, int64, error)
+        UpdateLastAccessed(ctx context.Context, id uint) error
+        Delete(ctx context.Context, id uint) error
+}
+
+// mailboxRepository implements MailboxRepository using GORM
+type mailboxRepository struct {
+        db *gorm.DB
+}
+
+// NewMailboxRepository creates a new MailboxRepository instance
+func NewMailboxRepository(db *gorm.DB) MailboxRepository <span class="cov0" title="0">{
+        return &amp;mailboxRepository{db: db}
+}</span>
+
+// Create creates a new mailbox
+func (r *mailboxRepository) Create(ctx context.Context, mailbox *models.Mailbox) error <span class="cov0" title="0">{
+        result := r.db.WithContext(ctx).Create(mailbox)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if isDuplicateKeyError(result.Error) </span><span class="cov0" title="0">{
+                        return fmt.Errorf("mailbox with address '%s' already exists: %w", mailbox.FullAddress, ErrDuplicateEntry)
+                }</span>
+                <span class="cov0" title="0">return fmt.Errorf("failed to create mailbox: %w", result.Error)</span>
+        }
+        <span class="cov0" title="0">return nil</span>
+}
+
+// GetByID retrieves a mailbox by its ID
+func (r *mailboxRepository) GetByID(ctx context.Context, id uint) (*models.Mailbox, error) <span class="cov0" title="0">{
+        var mailbox models.Mailbox
+        result := r.db.WithContext(ctx).First(&amp;mailbox, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if errors.Is(result.Error, gorm.ErrRecordNotFound) </span><span class="cov0" title="0">{
+                        return nil, ErrNotFound
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("failed to get mailbox by ID: %w", result.Error)</span>
+        }
+        <span class="cov0" title="0">return &amp;mailbox, nil</span>
+}
+
+// GetByAddress retrieves a mailbox by its full email address
+func (r *mailboxRepository) GetByAddress(ctx context.Context, fullAddress string) (*models.Mailbox, error) <span class="cov0" title="0">{
+        var mailbox models.Mailbox
+        result := r.db.WithContext(ctx).Where("full_address = ?", fullAddress).First(&amp;mailbox)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if errors.Is(result.Error, gorm.ErrRecordNotFound) </span><span class="cov0" title="0">{
+                        return nil, ErrNotFound
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("failed to get mailbox by address: %w", result.Error)</span>
+        }
+        <span class="cov0" title="0">return &amp;mailbox, nil</span>
+}
+
+// GetOrCreate retrieves a mailbox by address or creates it if it doesn't exist
+// Returns the mailbox, a boolean indicating if it was created, and any error
+func (r *mailboxRepository) GetOrCreate(ctx context.Context, localPart string, domainID uint, domainName string) (*models.Mailbox, bool, error) <span class="cov0" title="0">{
+        fullAddress := fmt.Sprintf("%s@%s", localPart, domainName)
+        
+        // Try to find existing mailbox
+        mailbox, err := r.GetByAddress(ctx, fullAddress)
+        if err == nil </span><span class="cov0" title="0">{
+                return mailbox, false, nil
+        }</span>
+        <span class="cov0" title="0">if !errors.Is(err, ErrNotFound) </span><span class="cov0" title="0">{
+                return nil, false, err
+        }</span>
+        
+        // Create new mailbox
+        <span class="cov0" title="0">mailbox = &amp;models.Mailbox{
+                LocalPart:   localPart,
+                DomainID:    domainID,
+                FullAddress: fullAddress,
+        }
+        
+        if err := r.Create(ctx, mailbox); err != nil </span><span class="cov0" title="0">{
+                // Handle race condition - another request might have created it
+                if errors.Is(err, ErrDuplicateEntry) </span><span class="cov0" title="0">{
+                        mailbox, err = r.GetByAddress(ctx, fullAddress)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return nil, false, err
+                        }</span>
+                        <span class="cov0" title="0">return mailbox, false, nil</span>
+                }
+                <span class="cov0" title="0">return nil, false, err</span>
+        }
+        
+        <span class="cov0" title="0">return mailbox, true, nil</span>
+}
+
+// ListByDomain retrieves all mailboxes for a domain with pagination and unread count
+func (r *mailboxRepository) ListByDomain(ctx context.Context, domainID uint, limit, offset int) ([]models.MailboxWithUnreadCount, int64, error) <span class="cov0" title="0">{
+        var total int64
+        
+        // Count total mailboxes for this domain
+        if err := r.db.WithContext(ctx).Model(&amp;models.Mailbox{}).Where("domain_id = ?", domainID).Count(&amp;total).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, 0, fmt.Errorf("failed to count mailboxes: %w", err)
+        }</span>
+        
+        // Get mailboxes with unread count
+        <span class="cov0" title="0">var results []models.MailboxWithUnreadCount
+        
+        query := `
+                SELECT 
+                        m.*,
+                        COALESCE((SELECT COUNT(*) FROM messages msg WHERE msg.mailbox_id = m.id AND msg.is_read = false), 0) as unread_count
+                FROM mailboxes m
+                WHERE m.domain_id = ?
+                ORDER BY m.created_at DESC
+                LIMIT ? OFFSET ?
+        `
+        
+        if err := r.db.WithContext(ctx).Raw(query, domainID, limit, offset).Scan(&amp;results).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, 0, fmt.Errorf("failed to list mailboxes: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return results, total, nil</span>
+}
+
+// UpdateLastAccessed updates the last_accessed_at timestamp for a mailbox
+func (r *mailboxRepository) UpdateLastAccessed(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        now := time.Now()
+        result := r.db.WithContext(ctx).Model(&amp;models.Mailbox{}).Where("id = ?", id).Update("last_accessed_at", now)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to update last accessed: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">if result.RowsAffected == 0 </span><span class="cov0" title="0">{
+                return ErrNotFound
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Delete deletes a mailbox by its ID (cascade deletes messages and attachments)
+func (r *mailboxRepository) Delete(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        result := r.db.WithContext(ctx).Delete(&amp;models.Mailbox{}, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to delete mailbox: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">if result.RowsAffected == 0 </span><span class="cov0" title="0">{
+                return ErrNotFound
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file20" style="display: none">package repository
+
+import (
+        "context"
+        "errors"
+        "fmt"
+
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+        "gorm.io/gorm"
+)
+
+// MessageRepository defines the interface for message data access
+type MessageRepository interface {
+        Create(ctx context.Context, message *models.Message) error
+        CreateWithAttachments(ctx context.Context, message *models.Message, attachments []models.Attachment) error
+        GetByID(ctx context.Context, id uint) (*models.Message, error)
+        ListByMailbox(ctx context.Context, mailboxID uint, limit, offset int) ([]models.MessageListItem, int64, error)
+        MarkAsRead(ctx context.Context, id uint) error
+        Delete(ctx context.Context, id uint) error
+        CountUnread(ctx context.Context, mailboxID uint) (int64, error)
+}
+
+// messageRepository implements MessageRepository using GORM
+type messageRepository struct {
+        db *gorm.DB
+}
+
+// NewMessageRepository creates a new MessageRepository instance
+func NewMessageRepository(db *gorm.DB) MessageRepository <span class="cov0" title="0">{
+        return &amp;messageRepository{db: db}
+}</span>
+
+// Create creates a new message
+func (r *messageRepository) Create(ctx context.Context, message *models.Message) error <span class="cov0" title="0">{
+        result := r.db.WithContext(ctx).Create(message)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create message: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// CreateWithAttachments creates a message with its attachments in a transaction
+func (r *messageRepository) CreateWithAttachments(ctx context.Context, message *models.Message, attachments []models.Attachment) error <span class="cov0" title="0">{
+        return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error </span><span class="cov0" title="0">{
+                // Create message first
+                if err := tx.Create(message).Error; err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to create message: %w", err)
+                }</span>
+
+                // Create attachments with message ID
+                <span class="cov0" title="0">for i := range attachments </span><span class="cov0" title="0">{
+                        attachments[i].MessageID = message.ID
+                        if err := tx.Create(&amp;attachments[i]).Error; err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to create attachment: %w", err)
+                        }</span>
+                }
+
+                <span class="cov0" title="0">return nil</span>
+        })
+}
+
+// GetByID retrieves a message by its ID with preloaded attachments
+func (r *messageRepository) GetByID(ctx context.Context, id uint) (*models.Message, error) <span class="cov0" title="0">{
+        var message models.Message
+        result := r.db.WithContext(ctx).Preload("Attachments").First(&amp;message, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if errors.Is(result.Error, gorm.ErrRecordNotFound) </span><span class="cov0" title="0">{
+                        return nil, ErrNotFound
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("failed to get message by ID: %w", result.Error)</span>
+        }
+        <span class="cov0" title="0">return &amp;message, nil</span>
+}
+
+// ListByMailbox retrieves messages for a mailbox with pagination, ordered by received_at descending
+func (r *messageRepository) ListByMailbox(ctx context.Context, mailboxID uint, limit, offset int) ([]models.MessageListItem, int64, error) <span class="cov0" title="0">{
+        var total int64
+
+        // Count total messages for this mailbox
+        if err := r.db.WithContext(ctx).Model(&amp;models.Message{}).Where("mailbox_id = ?", mailboxID).Count(&amp;total).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, 0, fmt.Errorf("failed to count messages: %w", err)
+        }</span>
+
+        // Get messages with attachment count
+        <span class="cov0" title="0">var results []models.MessageListItem
+
+        query := `
+                SELECT 
+                        m.id,
+                        m.mailbox_id,
+                        m.sender_email,
+                        m.sender_name,
+                        m.subject,
+                        m.snippet,
+                        m.is_read,
+                        m.received_at,
+                        COALESCE((SELECT COUNT(*) FROM attachments a WHERE a.message_id = m.id), 0) as attachment_count
+                FROM messages m
+                WHERE m.mailbox_id = ?
+                ORDER BY m.received_at DESC
+                LIMIT ? OFFSET ?
+        `
+
+        if err := r.db.WithContext(ctx).Raw(query, mailboxID, limit, offset).Scan(&amp;results).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, 0, fmt.Errorf("failed to list messages: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return results, total, nil</span>
+}
+
+// MarkAsRead marks a message as read
+func (r *messageRepository) MarkAsRead(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        result := r.db.WithContext(ctx).Model(&amp;models.Message{}).Where("id = ?", id).Update("is_read", true)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to mark message as read: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">if result.RowsAffected == 0 </span><span class="cov0" title="0">{
+                return ErrNotFound
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Delete deletes a message by its ID (cascade deletes attachments)
+func (r *messageRepository) Delete(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        result := r.db.WithContext(ctx).Delete(&amp;models.Message{}, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to delete message: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">if result.RowsAffected == 0 </span><span class="cov0" title="0">{
+                return ErrNotFound
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// CountUnread counts unread messages for a mailbox
+func (r *messageRepository) CountUnread(ctx context.Context, mailboxID uint) (int64, error) <span class="cov0" title="0">{
+        var count int64
+        result := r.db.WithContext(ctx).Model(&amp;models.Message{}).Where("mailbox_id = ? AND is_read = ?", mailboxID, false).Count(&amp;count)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return 0, fmt.Errorf("failed to count unread messages: %w", result.Error)
+        }</span>
+        <span class="cov0" title="0">return count, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file21" style="display: none">package smtp
+
+import (
+        "log/slog"
+
+        "github.com/emersion/go-smtp"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/storage"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/websocket"
+)
+
+// Backend implements the go-smtp Backend interface
+type Backend struct {
+        domainRepo     repository.DomainRepository
+        mailboxRepo    repository.MailboxRepository
+        messageRepo    repository.MessageRepository
+        attachmentRepo repository.AttachmentRepository
+        fileStorage    storage.FileStorage
+        wsHub          *websocket.Hub
+        autoProvision  bool
+        logger         *slog.Logger
+}
+
+// BackendConfig holds configuration for the SMTP backend
+type BackendConfig struct {
+        DomainRepo     repository.DomainRepository
+        MailboxRepo    repository.MailboxRepository
+        MessageRepo    repository.MessageRepository
+        AttachmentRepo repository.AttachmentRepository
+        FileStorage    storage.FileStorage
+        WSHub          *websocket.Hub
+        AutoProvision  bool
+        Logger         *slog.Logger
+}
+
+// NewBackend creates a new SMTP backend
+func NewBackend(cfg *BackendConfig) *Backend <span class="cov0" title="0">{
+        return &amp;Backend{
+                domainRepo:     cfg.DomainRepo,
+                mailboxRepo:    cfg.MailboxRepo,
+                messageRepo:    cfg.MessageRepo,
+                attachmentRepo: cfg.AttachmentRepo,
+                fileStorage:    cfg.FileStorage,
+                wsHub:          cfg.WSHub,
+                autoProvision:  cfg.AutoProvision,
+                logger:         cfg.Logger,
+        }
+}</span>
+
+// NewSession creates a new SMTP session
+func (b *Backend) NewSession(c *smtp.Conn) (smtp.Session, error) <span class="cov0" title="0">{
+        if b.logger != nil </span><span class="cov0" title="0">{
+                b.logger.Info("new SMTP connection", slog.String("remote_addr", c.Conn().RemoteAddr().String()))
+        }</span>
+        <span class="cov0" title="0">return NewSession(b), nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file22" style="display: none">package smtp
+
+import (
+        "bytes"
+        "io"
+        "regexp"
+        "strings"
+
+        "github.com/jhillyerd/enmime"
+)
+
+// ParsedEmail represents a parsed email message
+type ParsedEmail struct {
+        SenderEmail string
+        SenderName  string
+        Subject     string
+        Snippet     string
+        BodyText    string
+        BodyHTML    string
+        Attachments []ParsedAttachment
+}
+
+// ParsedAttachment represents a parsed email attachment
+type ParsedAttachment struct {
+        Filename    string
+        ContentType string
+        Content     io.Reader
+        Size        int64
+}
+
+// ParseEmail parses an email from an io.Reader
+func ParseEmail(r io.Reader) (*ParsedEmail, error) <span class="cov8" title="11">{
+        env, err := enmime.ReadEnvelope(r)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="11">parsed := &amp;ParsedEmail{
+                Subject:  env.GetHeader("Subject"),
+                BodyText: env.Text,
+                BodyHTML: env.HTML,
+        }
+
+        // Parse From header
+        fromHeader := env.GetHeader("From")
+        parsed.SenderName, parsed.SenderEmail = parseFromHeader(fromHeader)
+
+        // Generate snippet
+        parsed.Snippet = generateSnippet(parsed.BodyText, parsed.BodyHTML)
+
+        // Parse attachments
+        for _, att := range env.Attachments </span><span class="cov6" title="5">{
+                parsed.Attachments = append(parsed.Attachments, ParsedAttachment{
+                        Filename:    att.FileName,
+                        ContentType: att.ContentType,
+                        Content:     bytes.NewReader(att.Content),
+                        Size:        int64(len(att.Content)),
+                })
+        }</span>
+
+        // Also include inline attachments
+        <span class="cov8" title="11">for _, att := range env.Inlines </span><span class="cov0" title="0">{
+                if att.FileName != "" </span><span class="cov0" title="0">{
+                        parsed.Attachments = append(parsed.Attachments, ParsedAttachment{
+                                Filename:    att.FileName,
+                                ContentType: att.ContentType,
+                                Content:     bytes.NewReader(att.Content),
+                                Size:        int64(len(att.Content)),
+                        })
+                }</span>
+        }
+
+        <span class="cov8" title="11">return parsed, nil</span>
+}
+
+// parseFromHeader extracts name and email from a From header
+func parseFromHeader(from string) (name, email string) <span class="cov10" title="16">{
+        from = strings.TrimSpace(from)
+        if from == "" </span><span class="cov1" title="1">{
+                return "", ""
+        }</span>
+
+        // Check if it contains angle brackets: "Name" &lt;email@example.com&gt; or Name &lt;email@example.com&gt;
+        <span class="cov9" title="15">if strings.Contains(from, "&lt;") &amp;&amp; strings.Contains(from, "&gt;") </span><span class="cov5" title="4">{
+                re := regexp.MustCompile(`^(?:"?([^"&lt;]*)"?\s*)?&lt;([^&lt;&gt;]+@[^&lt;&gt;]+)&gt;$`)
+                matches := re.FindStringSubmatch(from)
+                if len(matches) &gt;= 3 </span><span class="cov5" title="4">{
+                        name = strings.TrimSpace(matches[1])
+                        email = strings.TrimSpace(matches[2])
+                        // Remove quotes from name
+                        name = strings.Trim(name, `"`)
+                        return name, email
+                }</span>
+        }
+
+        // No angle brackets - check if it's a valid email address
+        <span class="cov8" title="11">if strings.Contains(from, "@") </span><span class="cov8" title="11">{
+                // It's just an email address without name
+                return "", from
+        }</span>
+
+        // Fallback: treat entire string as email
+        <span class="cov0" title="0">return "", from</span>
+}
+
+// generateSnippet creates a preview snippet from email body
+func generateSnippet(bodyText, bodyHTML string) string <span class="cov10" title="16">{
+        var text string
+
+        if bodyText != "" </span><span class="cov9" title="14">{
+                text = bodyText
+        }</span> else<span class="cov3" title="2"> if bodyHTML != "" </span><span class="cov1" title="1">{
+                // Strip HTML tags
+                text = stripHTMLTags(bodyHTML)
+        }</span>
+
+        // Clean up whitespace
+        <span class="cov10" title="16">text = strings.Join(strings.Fields(text), " ")
+        text = strings.TrimSpace(text)
+
+        // Truncate to 255 characters
+        if len(text) &gt; 255 </span><span class="cov1" title="1">{
+                text = text[:252] + "..."
+        }</span>
+
+        <span class="cov10" title="16">return text</span>
+}
+
+// stripHTMLTags removes HTML tags from a string
+func stripHTMLTags(html string) string <span class="cov6" title="5">{
+        // Remove script elements (Go regex doesn't support backreferences)
+        reScript := regexp.MustCompile(`(?i)&lt;script[^&gt;]*&gt;[\s\S]*?&lt;/script&gt;`)
+        html = reScript.ReplaceAllString(html, "")
+
+        // Remove style elements
+        reStyle := regexp.MustCompile(`(?i)&lt;style[^&gt;]*&gt;[\s\S]*?&lt;/style&gt;`)
+        html = reStyle.ReplaceAllString(html, "")
+
+        // Remove HTML tags
+        reTags := regexp.MustCompile(`&lt;[^&gt;]*&gt;`)
+        html = reTags.ReplaceAllString(html, " ")
+
+        // Decode common HTML entities
+        html = strings.ReplaceAll(html, "&amp;nbsp;", " ")
+        html = strings.ReplaceAll(html, "&amp;amp;", "&amp;")
+        html = strings.ReplaceAll(html, "&amp;lt;", "&lt;")
+        html = strings.ReplaceAll(html, "&amp;gt;", "&gt;")
+        html = strings.ReplaceAll(html, "&amp;quot;", `"`)
+        html = strings.ReplaceAll(html, "&amp;#39;", "'")
+
+        return html
+}</span>
+</pre>
+		
+		<pre class="file" id="file23" style="display: none">package smtp
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "io"
+        "log/slog"
+        "strings"
+        "time"
+
+        "github.com/emersion/go-smtp"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/websocket"
+)
+
+// Session implements the go-smtp Session interface
+type Session struct {
+        backend    *Backend
+        from       string
+        recipients []string
+}
+
+// NewSession creates a new SMTP session
+func NewSession(backend *Backend) *Session <span class="cov0" title="0">{
+        return &amp;Session{
+                backend:    backend,
+                recipients: make([]string, 0),
+        }
+}</span>
+
+// AuthPlain handles PLAIN authentication (not required for receiving)
+func (s *Session) AuthPlain(username, password string) error <span class="cov0" title="0">{
+        // No authentication required for receiving emails
+        return nil
+}</span>
+
+// Mail handles the MAIL FROM command
+func (s *Session) Mail(from string, opts *smtp.MailOptions) error <span class="cov0" title="0">{
+        s.from = from
+        if s.backend.logger != nil </span><span class="cov0" title="0">{
+                s.backend.logger.Debug("MAIL FROM", slog.String("from", from))
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Rcpt handles the RCPT TO command
+func (s *Session) Rcpt(to string, opts *smtp.RcptOptions) error <span class="cov0" title="0">{
+        // Parse recipient address
+        localPart, domainName, err := parseEmailAddress(to)
+        if err != nil </span><span class="cov0" title="0">{
+                return &amp;smtp.SMTPError{
+                        Code:         550,
+                        EnhancedCode: smtp.EnhancedCode{5, 1, 1},
+                        Message:      "Invalid recipient address",
+                }
+        }</span>
+
+        // Check if domain exists and is active
+        <span class="cov0" title="0">ctx := context.Background()
+        domain, err := s.backend.domainRepo.GetByName(ctx, domainName)
+        if err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, repository.ErrNotFound) </span><span class="cov0" title="0">{
+                        return &amp;smtp.SMTPError{
+                                Code:         550,
+                                EnhancedCode: smtp.EnhancedCode{5, 1, 1},
+                                Message:      "Domain not found",
+                        }
+                }</span>
+                <span class="cov0" title="0">return &amp;smtp.SMTPError{
+                        Code:         451,
+                        EnhancedCode: smtp.EnhancedCode{4, 3, 0},
+                        Message:      "Temporary error",
+                }</span>
+        }
+
+        <span class="cov0" title="0">if !domain.IsActive </span><span class="cov0" title="0">{
+                return &amp;smtp.SMTPError{
+                        Code:         550,
+                        EnhancedCode: smtp.EnhancedCode{5, 1, 1},
+                        Message:      "Domain is not active",
+                }
+        }</span>
+
+        // If auto-provisioning is disabled, check if mailbox exists
+        <span class="cov0" title="0">if !s.backend.autoProvision </span><span class="cov0" title="0">{
+                _, err := s.backend.mailboxRepo.GetByAddress(ctx, to)
+                if err != nil </span><span class="cov0" title="0">{
+                        if errors.Is(err, repository.ErrNotFound) </span><span class="cov0" title="0">{
+                                return &amp;smtp.SMTPError{
+                                        Code:         550,
+                                        EnhancedCode: smtp.EnhancedCode{5, 1, 1},
+                                        Message:      "Mailbox not found",
+                                }
+                        }</span>
+                        <span class="cov0" title="0">return &amp;smtp.SMTPError{
+                                Code:         451,
+                                EnhancedCode: smtp.EnhancedCode{4, 3, 0},
+                                Message:      "Temporary error",
+                        }</span>
+                }
+        }
+
+        <span class="cov0" title="0">s.recipients = append(s.recipients, to)
+        if s.backend.logger != nil </span><span class="cov0" title="0">{
+                s.backend.logger.Debug("RCPT TO", slog.String("to", to), slog.String("local_part", localPart))
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Data handles the DATA command - receives the email content
+func (s *Session) Data(r io.Reader) error <span class="cov0" title="0">{
+        if len(s.recipients) == 0 </span><span class="cov0" title="0">{
+                return &amp;smtp.SMTPError{
+                        Code:         503,
+                        EnhancedCode: smtp.EnhancedCode{5, 5, 1},
+                        Message:      "No recipients specified",
+                }
+        }</span>
+
+        // Parse the email
+        <span class="cov0" title="0">parsedEmail, err := ParseEmail(r)
+        if err != nil </span><span class="cov0" title="0">{
+                if s.backend.logger != nil </span><span class="cov0" title="0">{
+                        s.backend.logger.Error("failed to parse email", slog.Any("error", err))
+                }</span>
+                <span class="cov0" title="0">return &amp;smtp.SMTPError{
+                        Code:         550,
+                        EnhancedCode: smtp.EnhancedCode{5, 6, 0},
+                        Message:      "Failed to parse email",
+                }</span>
+        }
+
+        // Override sender from envelope if not in headers
+        <span class="cov0" title="0">if parsedEmail.SenderEmail == "" </span><span class="cov0" title="0">{
+                parsedEmail.SenderEmail = s.from
+        }</span>
+
+        <span class="cov0" title="0">ctx := context.Background()
+
+        // Process for each recipient
+        for _, recipient := range s.recipients </span><span class="cov0" title="0">{
+                if err := s.processEmail(ctx, recipient, parsedEmail); err != nil </span><span class="cov0" title="0">{
+                        if s.backend.logger != nil </span><span class="cov0" title="0">{
+                                s.backend.logger.Error("failed to process email",
+                                        slog.String("recipient", recipient),
+                                        slog.Any("error", err))
+                        }</span>
+                        // Continue processing other recipients
+                }
+        }
+
+        <span class="cov0" title="0">if s.backend.logger != nil </span><span class="cov0" title="0">{
+                s.backend.logger.Info("email received",
+                        slog.String("from", s.from),
+                        slog.Int("recipients", len(s.recipients)),
+                        slog.String("subject", parsedEmail.Subject))
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// processEmail stores the email for a single recipient
+func (s *Session) processEmail(ctx context.Context, recipient string, email *ParsedEmail) error <span class="cov0" title="0">{
+        localPart, domainName, err := parseEmailAddress(recipient)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Get domain
+        <span class="cov0" title="0">domain, err := s.backend.domainRepo.GetByName(ctx, domainName)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get domain: %w", err)
+        }</span>
+
+        // Get or create mailbox
+        <span class="cov0" title="0">mailbox, created, err := s.backend.mailboxRepo.GetOrCreate(ctx, localPart, domain.ID, domain.Name)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get/create mailbox: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if created &amp;&amp; s.backend.logger != nil </span><span class="cov0" title="0">{
+                s.backend.logger.Info("auto-provisioned mailbox", slog.String("address", mailbox.FullAddress))
+        }</span>
+
+        // Create message
+        <span class="cov0" title="0">message := &amp;models.Message{
+                MailboxID:   mailbox.ID,
+                SenderEmail: email.SenderEmail,
+                SenderName:  email.SenderName,
+                Subject:     email.Subject,
+                Snippet:     email.Snippet,
+                BodyText:    email.BodyText,
+                BodyHTML:    email.BodyHTML,
+                IsRead:      false,
+        }
+
+        // Store attachments
+        var attachments []models.Attachment
+        for _, att := range email.Attachments </span><span class="cov0" title="0">{
+                // Save file to storage
+                filePath, err := s.backend.fileStorage.Save(att.Filename, att.Content)
+                if err != nil </span><span class="cov0" title="0">{
+                        if s.backend.logger != nil </span><span class="cov0" title="0">{
+                                s.backend.logger.Error("failed to save attachment",
+                                        slog.String("filename", att.Filename),
+                                        slog.Any("error", err))
+                        }</span>
+                        <span class="cov0" title="0">continue</span>
+                }
+
+                <span class="cov0" title="0">attachments = append(attachments, models.Attachment{
+                        Filename:    att.Filename,
+                        ContentType: att.ContentType,
+                        FilePath:    filePath,
+                        SizeBytes:   att.Size,
+                })</span>
+        }
+
+        // Create message with attachments
+        <span class="cov0" title="0">if err := s.backend.messageRepo.CreateWithAttachments(ctx, message, attachments); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create message: %w", err)
+        }</span>
+
+        // Notify WebSocket subscribers
+        <span class="cov0" title="0">if s.backend.wsHub != nil </span><span class="cov0" title="0">{
+                s.backend.wsHub.BroadcastNewMessage(mailbox.ID, &amp;websocket.NewMessagePayload{
+                        ID:          message.ID,
+                        SenderEmail: message.SenderEmail,
+                        SenderName:  message.SenderName,
+                        Subject:     message.Subject,
+                        ReceivedAt:  message.ReceivedAt.Format(time.RFC3339),
+                })
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Reset resets the session state
+func (s *Session) Reset() <span class="cov0" title="0">{
+        s.from = ""
+        s.recipients = make([]string, 0)
+}</span>
+
+// Logout handles the end of the session
+func (s *Session) Logout() error <span class="cov0" title="0">{
+        return nil
+}</span>
+
+// parseEmailAddress parses an email address into local part and domain
+func parseEmailAddress(address string) (localPart, domain string, err error) <span class="cov0" title="0">{
+        // Remove angle brackets if present
+        address = strings.TrimPrefix(address, "&lt;")
+        address = strings.TrimSuffix(address, "&gt;")
+        address = strings.TrimSpace(address)
+
+        parts := strings.Split(address, "@")
+        if len(parts) != 2 </span><span class="cov0" title="0">{
+                return "", "", fmt.Errorf("invalid email address: %s", address)
+        }</span>
+
+        <span class="cov0" title="0">localPart = strings.ToLower(parts[0])
+        domain = strings.ToLower(parts[1])
+
+        if localPart == "" || domain == "" </span><span class="cov0" title="0">{
+                return "", "", fmt.Errorf("invalid email address: %s", address)
+        }</span>
+
+        <span class="cov0" title="0">return localPart, domain, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file24" style="display: none">package storage
+
+import (
+        "fmt"
+        "io"
+        "os"
+        "path/filepath"
+
+        "github.com/google/uuid"
+)
+
+// FileStorage defines the interface for file storage operations
+type FileStorage interface {
+        Save(filename string, content io.Reader) (string, error)
+        Get(filePath string) (io.ReadCloser, error)
+        Delete(filePath string) error
+}
+
+// localStorage implements FileStorage using local filesystem
+type localStorage struct {
+        basePath string
+}
+
+// NewLocalStorage creates a new localStorage instance
+func NewLocalStorage(basePath string) (FileStorage, error) <span class="cov0" title="0">{
+        // Ensure base directory exists
+        if err := os.MkdirAll(basePath, 0755); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create storage directory: %w", err)
+        }</span>
+        <span class="cov0" title="0">return &amp;localStorage{basePath: basePath}, nil</span>
+}
+
+// Save stores a file and returns the relative path
+func (s *localStorage) Save(filename string, content io.Reader) (string, error) <span class="cov0" title="0">{
+        // Generate unique filename to prevent conflicts
+        ext := filepath.Ext(filename)
+        uniqueName := fmt.Sprintf("%s%s", uuid.New().String(), ext)
+        
+        // Create subdirectory based on first 2 chars of UUID for better distribution
+        subDir := uniqueName[:2]
+        dirPath := filepath.Join(s.basePath, subDir)
+        
+        if err := os.MkdirAll(dirPath, 0755); err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to create subdirectory: %w", err)
+        }</span>
+        
+        // Full path for the file
+        <span class="cov0" title="0">filePath := filepath.Join(subDir, uniqueName)
+        fullPath := filepath.Join(s.basePath, filePath)
+        
+        // Create file
+        file, err := os.Create(fullPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to create file: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer file.Close()
+        
+        // Copy content to file
+        if _, err := io.Copy(file, content); err != nil </span><span class="cov0" title="0">{
+                // Clean up on error
+                os.Remove(fullPath)
+                return "", fmt.Errorf("failed to write file: %w", err)
+        }</span>
+        
+        <span class="cov0" title="0">return filePath, nil</span>
+}
+
+// Get retrieves a file by its path
+func (s *localStorage) Get(filePath string) (io.ReadCloser, error) <span class="cov0" title="0">{
+        fullPath := filepath.Join(s.basePath, filePath)
+        
+        file, err := os.Open(fullPath)
+        if err != nil </span><span class="cov0" title="0">{
+                if os.IsNotExist(err) </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("file not found: %s", filePath)
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("failed to open file: %w", err)</span>
+        }
+        
+        <span class="cov0" title="0">return file, nil</span>
+}
+
+// Delete removes a file by its path
+func (s *localStorage) Delete(filePath string) error <span class="cov0" title="0">{
+        fullPath := filepath.Join(s.basePath, filePath)
+        
+        if err := os.Remove(fullPath); err != nil </span><span class="cov0" title="0">{
+                if os.IsNotExist(err) </span><span class="cov0" title="0">{
+                        // File already doesn't exist, not an error
+                        return nil
+                }</span>
+                <span class="cov0" title="0">return fmt.Errorf("failed to delete file: %w", err)</span>
+        }
+        
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file25" style="display: none">package websocket
+
+import (
+        "encoding/json"
+        "log/slog"
+        "time"
+
+        "github.com/gorilla/websocket"
+)
+
+const (
+        // Time allowed to write a message to the peer
+        writeWait = 10 * time.Second
+
+        // Time allowed to read the next pong message from the peer
+        pongWait = 60 * time.Second
+
+        // Send pings to peer with this period (must be less than pongWait)
+        pingPeriod = (pongWait * 9) / 10
+
+        // Maximum message size allowed from peer
+        maxMessageSize = 512
+)
+
+// Client represents a WebSocket client connection
+type Client struct {
+        hub    *Hub
+        conn   *websocket.Conn
+        send   chan []byte
+        logger *slog.Logger
+}
+
+// NewClient creates a new Client instance
+func NewClient(hub *Hub, conn *websocket.Conn, logger *slog.Logger) *Client <span class="cov0" title="0">{
+        return &amp;Client{
+                hub:    hub,
+                conn:   conn,
+                send:   make(chan []byte, 256),
+                logger: logger,
+        }
+}</span>
+
+// ReadPump pumps messages from the WebSocket connection to the hub
+func (c *Client) ReadPump() <span class="cov0" title="0">{
+        defer func() </span><span class="cov0" title="0">{
+                c.hub.Unregister(c)
+                c.conn.Close()
+        }</span>()
+
+        <span class="cov0" title="0">c.conn.SetReadLimit(maxMessageSize)
+        c.conn.SetReadDeadline(time.Now().Add(pongWait))
+        c.conn.SetPongHandler(func(string) error </span><span class="cov0" title="0">{
+                c.conn.SetReadDeadline(time.Now().Add(pongWait))
+                return nil
+        }</span>)
+
+        <span class="cov0" title="0">for </span><span class="cov0" title="0">{
+                _, message, err := c.conn.ReadMessage()
+                if err != nil </span><span class="cov0" title="0">{
+                        if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) </span><span class="cov0" title="0">{
+                                if c.logger != nil </span><span class="cov0" title="0">{
+                                        c.logger.Error("websocket read error", slog.Any("error", err))
+                                }</span>
+                        }
+                        <span class="cov0" title="0">break</span>
+                }
+
+                <span class="cov0" title="0">c.handleMessage(message)</span>
+        }
+}
+
+// WritePump pumps messages from the hub to the WebSocket connection
+func (c *Client) WritePump() <span class="cov0" title="0">{
+        ticker := time.NewTicker(pingPeriod)
+        defer func() </span><span class="cov0" title="0">{
+                ticker.Stop()
+                c.conn.Close()
+        }</span>()
+
+        <span class="cov0" title="0">for </span><span class="cov0" title="0">{
+                select </span>{
+                case message, ok := &lt;-c.send:<span class="cov0" title="0">
+                        c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+                        if !ok </span><span class="cov0" title="0">{
+                                // Hub closed the channel
+                                c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+                                return
+                        }</span>
+
+                        <span class="cov0" title="0">w, err := c.conn.NextWriter(websocket.TextMessage)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return
+                        }</span>
+                        <span class="cov0" title="0">w.Write(message)
+
+                        if err := w.Close(); err != nil </span><span class="cov0" title="0">{
+                                return
+                        }</span>
+
+                case &lt;-ticker.C:<span class="cov0" title="0">
+                        c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+                        if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil </span><span class="cov0" title="0">{
+                                return
+                        }</span>
+                }
+        }
+}
+
+// handleMessage processes incoming WebSocket messages
+func (c *Client) handleMessage(data []byte) <span class="cov0" title="0">{
+        var msg WSMessage
+        if err := json.Unmarshal(data, &amp;msg); err != nil </span><span class="cov0" title="0">{
+                c.sendError("invalid message format")
+                return
+        }</span>
+
+        <span class="cov0" title="0">switch msg.Type </span>{
+        case MessageTypeSubscribe:<span class="cov0" title="0">
+                if msg.MailboxID == 0 </span><span class="cov0" title="0">{
+                        c.sendError("mailbox_id is required")
+                        return
+                }</span>
+                <span class="cov0" title="0">c.hub.Subscribe(c, msg.MailboxID)</span>
+
+        case MessageTypeUnsubscribe:<span class="cov0" title="0">
+                if msg.MailboxID == 0 </span><span class="cov0" title="0">{
+                        c.sendError("mailbox_id is required")
+                        return
+                }</span>
+                <span class="cov0" title="0">c.hub.Unsubscribe(c, msg.MailboxID)</span>
+
+        default:<span class="cov0" title="0">
+                c.sendError("unknown message type")</span>
+        }
+}
+
+// sendError sends an error message to the client
+func (c *Client) sendError(errMsg string) <span class="cov0" title="0">{
+        msg := WSMessage{
+                Type:  MessageTypeError,
+                Error: errMsg,
+        }
+
+        data, err := json.Marshal(msg)
+        if err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov0" title="0">select </span>{
+        case c.send &lt;- data:<span class="cov0" title="0"></span>
+        default:<span class="cov0" title="0"></span>
+                // Buffer full, skip
+        }
+}
+</pre>
+		
+		<pre class="file" id="file26" style="display: none">package websocket
+
+import (
+        "encoding/json"
+        "log/slog"
+        "sync"
+)
+
+// MessageType represents the type of WebSocket message
+type MessageType string
+
+const (
+        MessageTypeSubscribe   MessageType = "subscribe"
+        MessageTypeUnsubscribe MessageType = "unsubscribe"
+        MessageTypeNewMessage  MessageType = "new_message"
+        MessageTypeError       MessageType = "error"
+)
+
+// WSMessage represents a WebSocket message
+type WSMessage struct {
+        Type      MessageType `json:"type"`
+        MailboxID uint        `json:"mailbox_id,omitempty"`
+        Message   interface{} `json:"message,omitempty"`
+        Error     string      `json:"error,omitempty"`
+}
+
+// NewMessagePayload represents the payload for new message notifications
+type NewMessagePayload struct {
+        ID          uint   `json:"id"`
+        SenderEmail string `json:"sender_email"`
+        SenderName  string `json:"sender_name,omitempty"`
+        Subject     string `json:"subject,omitempty"`
+        ReceivedAt  string `json:"received_at"`
+}
+
+// Hub maintains the set of active clients and broadcasts messages
+type Hub struct {
+        // Registered clients
+        clients map[*Client]bool
+
+        // Mailbox subscriptions: mailboxID -&gt; set of clients
+        subscriptions map[uint]map[*Client]bool
+
+        // Register requests from clients
+        register chan *Client
+
+        // Unregister requests from clients
+        unregister chan *Client
+
+        // Subscribe to mailbox
+        subscribe chan *subscriptionRequest
+
+        // Unsubscribe from mailbox
+        unsubscribeMailbox chan *subscriptionRequest
+
+        // Broadcast to mailbox subscribers
+        broadcast chan *broadcastMessage
+
+        // Mutex for thread-safe operations
+        mu sync.RWMutex
+
+        // Logger
+        logger *slog.Logger
+}
+
+type subscriptionRequest struct {
+        client    *Client
+        mailboxID uint
+}
+
+type broadcastMessage struct {
+        mailboxID uint
+        message   []byte
+}
+
+// NewHub creates a new Hub instance
+func NewHub(logger *slog.Logger) *Hub <span class="cov0" title="0">{
+        return &amp;Hub{
+                clients:            make(map[*Client]bool),
+                subscriptions:      make(map[uint]map[*Client]bool),
+                register:           make(chan *Client),
+                unregister:         make(chan *Client),
+                subscribe:          make(chan *subscriptionRequest),
+                unsubscribeMailbox: make(chan *subscriptionRequest),
+                broadcast:          make(chan *broadcastMessage, 256),
+                logger:             logger,
+        }
+}</span>
+
+// Run starts the hub's main loop
+func (h *Hub) Run() <span class="cov0" title="0">{
+        for </span><span class="cov0" title="0">{
+                select </span>{
+                case client := &lt;-h.register:<span class="cov0" title="0">
+                        h.mu.Lock()
+                        h.clients[client] = true
+                        h.mu.Unlock()
+                        if h.logger != nil </span><span class="cov0" title="0">{
+                                h.logger.Debug("client registered")
+                        }</span>
+
+                case client := &lt;-h.unregister:<span class="cov0" title="0">
+                        h.mu.Lock()
+                        if _, ok := h.clients[client]; ok </span><span class="cov0" title="0">{
+                                delete(h.clients, client)
+                                close(client.send)
+                                // Remove from all subscriptions
+                                for mailboxID, subscribers := range h.subscriptions </span><span class="cov0" title="0">{
+                                        delete(subscribers, client)
+                                        if len(subscribers) == 0 </span><span class="cov0" title="0">{
+                                                delete(h.subscriptions, mailboxID)
+                                        }</span>
+                                }
+                        }
+                        <span class="cov0" title="0">h.mu.Unlock()
+                        if h.logger != nil </span><span class="cov0" title="0">{
+                                h.logger.Debug("client unregistered")
+                        }</span>
+
+                case req := &lt;-h.subscribe:<span class="cov0" title="0">
+                        h.mu.Lock()
+                        if h.subscriptions[req.mailboxID] == nil </span><span class="cov0" title="0">{
+                                h.subscriptions[req.mailboxID] = make(map[*Client]bool)
+                        }</span>
+                        <span class="cov0" title="0">h.subscriptions[req.mailboxID][req.client] = true
+                        h.mu.Unlock()
+                        if h.logger != nil </span><span class="cov0" title="0">{
+                                h.logger.Debug("client subscribed to mailbox", slog.Uint64("mailbox_id", uint64(req.mailboxID)))
+                        }</span>
+
+                case req := &lt;-h.unsubscribeMailbox:<span class="cov0" title="0">
+                        h.mu.Lock()
+                        if subscribers, ok := h.subscriptions[req.mailboxID]; ok </span><span class="cov0" title="0">{
+                                delete(subscribers, req.client)
+                                if len(subscribers) == 0 </span><span class="cov0" title="0">{
+                                        delete(h.subscriptions, req.mailboxID)
+                                }</span>
+                        }
+                        <span class="cov0" title="0">h.mu.Unlock()
+                        if h.logger != nil </span><span class="cov0" title="0">{
+                                h.logger.Debug("client unsubscribed from mailbox", slog.Uint64("mailbox_id", uint64(req.mailboxID)))
+                        }</span>
+
+                case msg := &lt;-h.broadcast:<span class="cov0" title="0">
+                        h.mu.RLock()
+                        subscribers := h.subscriptions[msg.mailboxID]
+                        for client := range subscribers </span><span class="cov0" title="0">{
+                                select </span>{
+                                case client.send &lt;- msg.message:<span class="cov0" title="0"></span>
+                                default:<span class="cov0" title="0"></span>
+                                        // Client buffer full, skip
+                                }
+                        }
+                        <span class="cov0" title="0">h.mu.RUnlock()</span>
+                }
+        }
+}
+
+// Register adds a client to the hub
+func (h *Hub) Register(client *Client) <span class="cov0" title="0">{
+        h.register &lt;- client
+}</span>
+
+// Unregister removes a client from the hub
+func (h *Hub) Unregister(client *Client) <span class="cov0" title="0">{
+        h.unregister &lt;- client
+}</span>
+
+// Subscribe subscribes a client to a mailbox
+func (h *Hub) Subscribe(client *Client, mailboxID uint) <span class="cov0" title="0">{
+        h.subscribe &lt;- &amp;subscriptionRequest{client: client, mailboxID: mailboxID}
+}</span>
+
+// Unsubscribe unsubscribes a client from a mailbox
+func (h *Hub) Unsubscribe(client *Client, mailboxID uint) <span class="cov0" title="0">{
+        h.unsubscribeMailbox &lt;- &amp;subscriptionRequest{client: client, mailboxID: mailboxID}
+}</span>
+
+// BroadcastNewMessage broadcasts a new message notification to mailbox subscribers
+func (h *Hub) BroadcastNewMessage(mailboxID uint, payload *NewMessagePayload) <span class="cov0" title="0">{
+        msg := WSMessage{
+                Type:      MessageTypeNewMessage,
+                MailboxID: mailboxID,
+                Message:   payload,
+        }
+
+        data, err := json.Marshal(msg)
+        if err != nil </span><span class="cov0" title="0">{
+                if h.logger != nil </span><span class="cov0" title="0">{
+                        h.logger.Error("failed to marshal broadcast message", slog.Any("error", err))
+                }</span>
+                <span class="cov0" title="0">return</span>
+        }
+
+        <span class="cov0" title="0">h.broadcast &lt;- &amp;broadcastMessage{
+                mailboxID: mailboxID,
+                message:   data,
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file27" style="display: none">package fixtures
+
+import (
+        "time"
+
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+)
+
+// DomainBuilder creates test Domain instances with fluent API
+type DomainBuilder struct {
+        domain models.Domain
+}
+
+// NewDomainBuilder creates a new DomainBuilder with sensible defaults
+func NewDomainBuilder() *DomainBuilder <span class="cov0" title="0">{
+        now := time.Now()
+        return &amp;DomainBuilder{
+                domain: models.Domain{
+                        ID:        1,
+                        Name:      "example.com",
+                        IsActive:  true,
+                        CreatedAt: now,
+                        UpdatedAt: now,
+                },
+        }
+}</span>
+
+// WithID sets the domain ID
+func (b *DomainBuilder) WithID(id uint) *DomainBuilder <span class="cov0" title="0">{
+        b.domain.ID = id
+        return b
+}</span>
+
+// WithName sets the domain name
+func (b *DomainBuilder) WithName(name string) *DomainBuilder <span class="cov0" title="0">{
+        b.domain.Name = name
+        return b
+}</span>
+
+// WithActive sets the domain active status
+func (b *DomainBuilder) WithActive(active bool) *DomainBuilder <span class="cov0" title="0">{
+        b.domain.IsActive = active
+        return b
+}</span>
+
+// WithCreatedAt sets the created timestamp
+func (b *DomainBuilder) WithCreatedAt(t time.Time) *DomainBuilder <span class="cov0" title="0">{
+        b.domain.CreatedAt = t
+        return b
+}</span>
+
+// WithUpdatedAt sets the updated timestamp
+func (b *DomainBuilder) WithUpdatedAt(t time.Time) *DomainBuilder <span class="cov0" title="0">{
+        b.domain.UpdatedAt = t
+        return b
+}</span>
+
+// Build returns the constructed Domain
+func (b *DomainBuilder) Build() *models.Domain <span class="cov0" title="0">{
+        return &amp;b.domain
+}</span>
+
+// BuildValue returns the constructed Domain as a value (not pointer)
+func (b *DomainBuilder) BuildValue() models.Domain <span class="cov0" title="0">{
+        return b.domain
+}</span>
+
+// MailboxBuilder creates test Mailbox instances with fluent API
+type MailboxBuilder struct {
+        mailbox models.Mailbox
+}
+
+// NewMailboxBuilder creates a new MailboxBuilder with sensible defaults
+func NewMailboxBuilder() *MailboxBuilder <span class="cov0" title="0">{
+        now := time.Now()
+        return &amp;MailboxBuilder{
+                mailbox: models.Mailbox{
+                        ID:          1,
+                        LocalPart:   "user",
+                        DomainID:    1,
+                        FullAddress: "user@example.com",
+                        CreatedAt:   now,
+                },
+        }
+}</span>
+
+// WithID sets the mailbox ID
+func (b *MailboxBuilder) WithID(id uint) *MailboxBuilder <span class="cov0" title="0">{
+        b.mailbox.ID = id
+        return b
+}</span>
+
+// WithLocalPart sets the local part of the email address
+func (b *MailboxBuilder) WithLocalPart(localPart string) *MailboxBuilder <span class="cov0" title="0">{
+        b.mailbox.LocalPart = localPart
+        return b
+}</span>
+
+// WithDomainID sets the domain ID
+func (b *MailboxBuilder) WithDomainID(domainID uint) *MailboxBuilder <span class="cov0" title="0">{
+        b.mailbox.DomainID = domainID
+        return b
+}</span>
+
+// WithFullAddress sets the full email address
+func (b *MailboxBuilder) WithFullAddress(address string) *MailboxBuilder <span class="cov0" title="0">{
+        b.mailbox.FullAddress = address
+        return b
+}</span>
+
+// WithCreatedAt sets the created timestamp
+func (b *MailboxBuilder) WithCreatedAt(t time.Time) *MailboxBuilder <span class="cov0" title="0">{
+        b.mailbox.CreatedAt = t
+        return b
+}</span>
+
+// WithLastAccessedAt sets the last accessed timestamp
+func (b *MailboxBuilder) WithLastAccessedAt(t *time.Time) *MailboxBuilder <span class="cov0" title="0">{
+        b.mailbox.LastAccessedAt = t
+        return b
+}</span>
+
+// WithDomain sets the associated domain
+func (b *MailboxBuilder) WithDomain(domain models.Domain) *MailboxBuilder <span class="cov0" title="0">{
+        b.mailbox.Domain = domain
+        return b
+}</span>
+
+// Build returns the constructed Mailbox
+func (b *MailboxBuilder) Build() *models.Mailbox <span class="cov0" title="0">{
+        return &amp;b.mailbox
+}</span>
+
+// BuildValue returns the constructed Mailbox as a value (not pointer)
+func (b *MailboxBuilder) BuildValue() models.Mailbox <span class="cov0" title="0">{
+        return b.mailbox
+}</span>
+
+
+// MessageBuilder creates test Message instances with fluent API
+type MessageBuilder struct {
+        message models.Message
+}
+
+// NewMessageBuilder creates a new MessageBuilder with sensible defaults
+func NewMessageBuilder() *MessageBuilder <span class="cov0" title="0">{
+        now := time.Now()
+        return &amp;MessageBuilder{
+                message: models.Message{
+                        ID:          1,
+                        MailboxID:   1,
+                        SenderEmail: "sender@external.com",
+                        SenderName:  "Test Sender",
+                        Subject:     "Test Subject",
+                        Snippet:     "This is a test email...",
+                        BodyText:    "This is a test email body.",
+                        BodyHTML:    "&lt;p&gt;This is a test email body.&lt;/p&gt;",
+                        IsRead:      false,
+                        ReceivedAt:  now,
+                },
+        }
+}</span>
+
+// WithID sets the message ID
+func (b *MessageBuilder) WithID(id uint) *MessageBuilder <span class="cov0" title="0">{
+        b.message.ID = id
+        return b
+}</span>
+
+// WithMailboxID sets the mailbox ID
+func (b *MessageBuilder) WithMailboxID(mailboxID uint) *MessageBuilder <span class="cov0" title="0">{
+        b.message.MailboxID = mailboxID
+        return b
+}</span>
+
+// WithSender sets the sender email and name
+func (b *MessageBuilder) WithSender(email, name string) *MessageBuilder <span class="cov0" title="0">{
+        b.message.SenderEmail = email
+        b.message.SenderName = name
+        return b
+}</span>
+
+// WithSenderEmail sets only the sender email
+func (b *MessageBuilder) WithSenderEmail(email string) *MessageBuilder <span class="cov0" title="0">{
+        b.message.SenderEmail = email
+        return b
+}</span>
+
+// WithSenderName sets only the sender name
+func (b *MessageBuilder) WithSenderName(name string) *MessageBuilder <span class="cov0" title="0">{
+        b.message.SenderName = name
+        return b
+}</span>
+
+// WithSubject sets the message subject
+func (b *MessageBuilder) WithSubject(subject string) *MessageBuilder <span class="cov0" title="0">{
+        b.message.Subject = subject
+        return b
+}</span>
+
+// WithSnippet sets the message snippet
+func (b *MessageBuilder) WithSnippet(snippet string) *MessageBuilder <span class="cov0" title="0">{
+        b.message.Snippet = snippet
+        return b
+}</span>
+
+// WithBody sets both text and HTML body
+func (b *MessageBuilder) WithBody(text, html string) *MessageBuilder <span class="cov0" title="0">{
+        b.message.BodyText = text
+        b.message.BodyHTML = html
+        return b
+}</span>
+
+// WithBodyText sets only the text body
+func (b *MessageBuilder) WithBodyText(text string) *MessageBuilder <span class="cov0" title="0">{
+        b.message.BodyText = text
+        return b
+}</span>
+
+// WithBodyHTML sets only the HTML body
+func (b *MessageBuilder) WithBodyHTML(html string) *MessageBuilder <span class="cov0" title="0">{
+        b.message.BodyHTML = html
+        return b
+}</span>
+
+// WithRead sets the read status
+func (b *MessageBuilder) WithRead(isRead bool) *MessageBuilder <span class="cov0" title="0">{
+        b.message.IsRead = isRead
+        return b
+}</span>
+
+// WithReceivedAt sets the received timestamp
+func (b *MessageBuilder) WithReceivedAt(t time.Time) *MessageBuilder <span class="cov0" title="0">{
+        b.message.ReceivedAt = t
+        return b
+}</span>
+
+// WithAttachments sets the message attachments
+func (b *MessageBuilder) WithAttachments(attachments []models.Attachment) *MessageBuilder <span class="cov0" title="0">{
+        b.message.Attachments = attachments
+        return b
+}</span>
+
+// WithMailbox sets the associated mailbox
+func (b *MessageBuilder) WithMailbox(mailbox models.Mailbox) *MessageBuilder <span class="cov0" title="0">{
+        b.message.Mailbox = mailbox
+        return b
+}</span>
+
+// Build returns the constructed Message
+func (b *MessageBuilder) Build() *models.Message <span class="cov0" title="0">{
+        return &amp;b.message
+}</span>
+
+// BuildValue returns the constructed Message as a value (not pointer)
+func (b *MessageBuilder) BuildValue() models.Message <span class="cov0" title="0">{
+        return b.message
+}</span>
+
+// AttachmentBuilder creates test Attachment instances with fluent API
+type AttachmentBuilder struct {
+        attachment models.Attachment
+}
+
+// NewAttachmentBuilder creates a new AttachmentBuilder with sensible defaults
+func NewAttachmentBuilder() *AttachmentBuilder <span class="cov0" title="0">{
+        return &amp;AttachmentBuilder{
+                attachment: models.Attachment{
+                        ID:          1,
+                        MessageID:   1,
+                        Filename:    "document.pdf",
+                        ContentType: "application/pdf",
+                        FilePath:    "/attachments/abc123.pdf",
+                        SizeBytes:   1024,
+                },
+        }
+}</span>
+
+// WithID sets the attachment ID
+func (b *AttachmentBuilder) WithID(id uint) *AttachmentBuilder <span class="cov0" title="0">{
+        b.attachment.ID = id
+        return b
+}</span>
+
+// WithMessageID sets the message ID
+func (b *AttachmentBuilder) WithMessageID(messageID uint) *AttachmentBuilder <span class="cov0" title="0">{
+        b.attachment.MessageID = messageID
+        return b
+}</span>
+
+// WithFilename sets the attachment filename
+func (b *AttachmentBuilder) WithFilename(filename string) *AttachmentBuilder <span class="cov0" title="0">{
+        b.attachment.Filename = filename
+        return b
+}</span>
+
+// WithContentType sets the content type
+func (b *AttachmentBuilder) WithContentType(contentType string) *AttachmentBuilder <span class="cov0" title="0">{
+        b.attachment.ContentType = contentType
+        return b
+}</span>
+
+// WithFilePath sets the file path
+func (b *AttachmentBuilder) WithFilePath(filePath string) *AttachmentBuilder <span class="cov0" title="0">{
+        b.attachment.FilePath = filePath
+        return b
+}</span>
+
+// WithSize sets the file size in bytes
+func (b *AttachmentBuilder) WithSize(size int64) *AttachmentBuilder <span class="cov0" title="0">{
+        b.attachment.SizeBytes = size
+        return b
+}</span>
+
+// WithMessage sets the associated message
+func (b *AttachmentBuilder) WithMessage(message models.Message) *AttachmentBuilder <span class="cov0" title="0">{
+        b.attachment.Message = message
+        return b
+}</span>
+
+// Build returns the constructed Attachment
+func (b *AttachmentBuilder) Build() *models.Attachment <span class="cov0" title="0">{
+        return &amp;b.attachment
+}</span>
+
+// BuildValue returns the constructed Attachment as a value (not pointer)
+func (b *AttachmentBuilder) BuildValue() models.Attachment <span class="cov0" title="0">{
+        return b.attachment
+}</span>
+
+// Helper functions for creating multiple test entities
+
+// CreateDomains creates a slice of domains with sequential IDs
+func CreateDomains(count int) []models.Domain <span class="cov0" title="0">{
+        domains := make([]models.Domain, count)
+        for i := 0; i &lt; count; i++ </span><span class="cov0" title="0">{
+                domains[i] = NewDomainBuilder().
+                        WithID(uint(i + 1)).
+                        WithName(generateDomainName(i)).
+                        BuildValue()
+        }</span>
+        <span class="cov0" title="0">return domains</span>
+}
+
+// CreateMailboxes creates a slice of mailboxes for a given domain
+func CreateMailboxes(domainID uint, count int) []models.Mailbox <span class="cov0" title="0">{
+        mailboxes := make([]models.Mailbox, count)
+        for i := 0; i &lt; count; i++ </span><span class="cov0" title="0">{
+                localPart := generateLocalPart(i)
+                mailboxes[i] = NewMailboxBuilder().
+                        WithID(uint(i + 1)).
+                        WithLocalPart(localPart).
+                        WithDomainID(domainID).
+                        WithFullAddress(localPart + "@example.com").
+                        BuildValue()
+        }</span>
+        <span class="cov0" title="0">return mailboxes</span>
+}
+
+// CreateMessages creates a slice of messages for a given mailbox
+func CreateMessages(mailboxID uint, count int) []models.Message <span class="cov0" title="0">{
+        messages := make([]models.Message, count)
+        for i := 0; i &lt; count; i++ </span><span class="cov0" title="0">{
+                messages[i] = NewMessageBuilder().
+                        WithID(uint(i + 1)).
+                        WithMailboxID(mailboxID).
+                        WithSubject(generateSubject(i)).
+                        WithReceivedAt(time.Now().Add(-time.Duration(i) * time.Hour)).
+                        BuildValue()
+        }</span>
+        <span class="cov0" title="0">return messages</span>
+}
+
+// Helper functions for generating test data
+func generateDomainName(index int) string <span class="cov0" title="0">{
+        names := []string{"example.com", "test.com", "mail.org", "inbox.net", "demo.io"}
+        return names[index%len(names)]
+}</span>
+
+func generateLocalPart(index int) string <span class="cov0" title="0">{
+        parts := []string{"user", "admin", "info", "support", "contact"}
+        if index &lt; len(parts) </span><span class="cov0" title="0">{
+                return parts[index]
+        }</span>
+        <span class="cov0" title="0">return parts[index%len(parts)] + string(rune('0'+index/len(parts)))</span>
+}
+
+func generateSubject(index int) string <span class="cov0" title="0">{
+        subjects := []string{
+                "Welcome to our service",
+                "Your order confirmation",
+                "Important update",
+                "Newsletter",
+                "Account notification",
+        }
+        return subjects[index%len(subjects)]
+}</span>
+</pre>
+		
+		<pre class="file" id="file28" style="display: none">package mocks
+
+import (
+        "context"
+
+        "github.com/stretchr/testify/mock"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/models"
+)
+
+// MockDomainRepository implements repository.DomainRepository
+type MockDomainRepository struct {
+        mock.Mock
+}
+
+// Create creates a new domain
+func (m *MockDomainRepository) Create(ctx context.Context, domain *models.Domain) error <span class="cov0" title="0">{
+        args := m.Called(ctx, domain)
+        return args.Error(0)
+}</span>
+
+// GetByID retrieves a domain by its ID
+func (m *MockDomainRepository) GetByID(ctx context.Context, id uint) (*models.Domain, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*models.Domain), args.Error(1)</span>
+}
+
+// GetByName retrieves a domain by its name
+func (m *MockDomainRepository) GetByName(ctx context.Context, name string) (*models.Domain, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, name)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*models.Domain), args.Error(1)</span>
+}
+
+// List retrieves all domains, optionally filtering by active status
+func (m *MockDomainRepository) List(ctx context.Context, activeOnly bool) ([]models.Domain, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, activeOnly)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).([]models.Domain), args.Error(1)</span>
+}
+
+
+// Update updates an existing domain
+func (m *MockDomainRepository) Update(ctx context.Context, domain *models.Domain) error <span class="cov0" title="0">{
+        args := m.Called(ctx, domain)
+        return args.Error(0)
+}</span>
+
+// Delete deletes a domain by its ID
+func (m *MockDomainRepository) Delete(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        return args.Error(0)
+}</span>
+
+// MockMailboxRepository implements repository.MailboxRepository
+type MockMailboxRepository struct {
+        mock.Mock
+}
+
+// Create creates a new mailbox
+func (m *MockMailboxRepository) Create(ctx context.Context, mailbox *models.Mailbox) error <span class="cov0" title="0">{
+        args := m.Called(ctx, mailbox)
+        return args.Error(0)
+}</span>
+
+// GetByID retrieves a mailbox by its ID
+func (m *MockMailboxRepository) GetByID(ctx context.Context, id uint) (*models.Mailbox, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*models.Mailbox), args.Error(1)</span>
+}
+
+// GetByAddress retrieves a mailbox by its full email address
+func (m *MockMailboxRepository) GetByAddress(ctx context.Context, fullAddress string) (*models.Mailbox, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, fullAddress)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*models.Mailbox), args.Error(1)</span>
+}
+
+// GetOrCreate retrieves a mailbox by address or creates it if it doesn't exist
+func (m *MockMailboxRepository) GetOrCreate(ctx context.Context, localPart string, domainID uint, domainName string) (*models.Mailbox, bool, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, localPart, domainID, domainName)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Bool(1), args.Error(2)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*models.Mailbox), args.Bool(1), args.Error(2)</span>
+}
+
+
+// ListByDomain retrieves all mailboxes for a domain with pagination and unread count
+func (m *MockMailboxRepository) ListByDomain(ctx context.Context, domainID uint, limit, offset int) ([]models.MailboxWithUnreadCount, int64, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, domainID, limit, offset)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Get(1).(int64), args.Error(2)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).([]models.MailboxWithUnreadCount), args.Get(1).(int64), args.Error(2)</span>
+}
+
+// UpdateLastAccessed updates the last_accessed_at timestamp for a mailbox
+func (m *MockMailboxRepository) UpdateLastAccessed(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        return args.Error(0)
+}</span>
+
+// Delete deletes a mailbox by its ID
+func (m *MockMailboxRepository) Delete(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        return args.Error(0)
+}</span>
+
+// MockMessageRepository implements repository.MessageRepository
+type MockMessageRepository struct {
+        mock.Mock
+}
+
+// Create creates a new message
+func (m *MockMessageRepository) Create(ctx context.Context, message *models.Message) error <span class="cov0" title="0">{
+        args := m.Called(ctx, message)
+        return args.Error(0)
+}</span>
+
+// CreateWithAttachments creates a message with its attachments in a transaction
+func (m *MockMessageRepository) CreateWithAttachments(ctx context.Context, message *models.Message, attachments []models.Attachment) error <span class="cov0" title="0">{
+        args := m.Called(ctx, message, attachments)
+        return args.Error(0)
+}</span>
+
+// GetByID retrieves a message by its ID with preloaded attachments
+func (m *MockMessageRepository) GetByID(ctx context.Context, id uint) (*models.Message, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*models.Message), args.Error(1)</span>
+}
+
+
+// ListByMailbox retrieves messages for a mailbox with pagination
+func (m *MockMessageRepository) ListByMailbox(ctx context.Context, mailboxID uint, limit, offset int) ([]models.MessageListItem, int64, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, mailboxID, limit, offset)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Get(1).(int64), args.Error(2)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).([]models.MessageListItem), args.Get(1).(int64), args.Error(2)</span>
+}
+
+// MarkAsRead marks a message as read
+func (m *MockMessageRepository) MarkAsRead(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        return args.Error(0)
+}</span>
+
+// Delete deletes a message by its ID
+func (m *MockMessageRepository) Delete(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        return args.Error(0)
+}</span>
+
+// CountUnread counts unread messages for a mailbox
+func (m *MockMessageRepository) CountUnread(ctx context.Context, mailboxID uint) (int64, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, mailboxID)
+        return args.Get(0).(int64), args.Error(1)
+}</span>
+
+// MockAttachmentRepository implements repository.AttachmentRepository
+type MockAttachmentRepository struct {
+        mock.Mock
+}
+
+// Create creates a new attachment record
+func (m *MockAttachmentRepository) Create(ctx context.Context, attachment *models.Attachment) error <span class="cov0" title="0">{
+        args := m.Called(ctx, attachment)
+        return args.Error(0)
+}</span>
+
+// GetByID retrieves an attachment by its ID
+func (m *MockAttachmentRepository) GetByID(ctx context.Context, id uint) (*models.Attachment, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(*models.Attachment), args.Error(1)</span>
+}
+
+// ListByMessage retrieves all attachments for a message
+func (m *MockAttachmentRepository) ListByMessage(ctx context.Context, messageID uint) ([]models.Attachment, error) <span class="cov0" title="0">{
+        args := m.Called(ctx, messageID)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).([]models.Attachment), args.Error(1)</span>
+}
+
+// Delete deletes an attachment by its ID
+func (m *MockAttachmentRepository) Delete(ctx context.Context, id uint) error <span class="cov0" title="0">{
+        args := m.Called(ctx, id)
+        return args.Error(0)
+}</span>
+</pre>
+		
+		<pre class="file" id="file29" style="display: none">package mocks
+
+import (
+        "io"
+
+        "github.com/stretchr/testify/mock"
+)
+
+// MockFileStorage implements storage.FileStorage
+type MockFileStorage struct {
+        mock.Mock
+}
+
+// Save stores a file and returns the relative path
+func (m *MockFileStorage) Save(filename string, content io.Reader) (string, error) <span class="cov0" title="0">{
+        args := m.Called(filename, content)
+        return args.String(0), args.Error(1)
+}</span>
+
+// Get retrieves a file by its path
+func (m *MockFileStorage) Get(filePath string) (io.ReadCloser, error) <span class="cov0" title="0">{
+        args := m.Called(filePath)
+        if args.Get(0) == nil </span><span class="cov0" title="0">{
+                return nil, args.Error(1)
+        }</span>
+        <span class="cov0" title="0">return args.Get(0).(io.ReadCloser), args.Error(1)</span>
+}
+
+// Delete removes a file by its path
+func (m *MockFileStorage) Delete(filePath string) error <span class="cov0" title="0">{
+        args := m.Called(filePath)
+        return args.Error(0)
+}</span>
+</pre>
+		
+		<pre class="file" id="file30" style="display: none">package mocks
+
+import (
+        "github.com/stretchr/testify/mock"
+        "github.com/welldanyogia/webrana-infinimail-backend/internal/websocket"
+)
+
+// NotificationRecord records a notification sent through the mock hub
+type NotificationRecord struct {
+        MailboxID uint
+        Payload   *websocket.NewMessagePayload
+}
+
+// MockWebSocketHub implements a mock for websocket.Hub
+type MockWebSocketHub struct {
+        mock.Mock
+        Notifications []NotificationRecord
+}
+
+// NewMockWebSocketHub creates a new MockWebSocketHub instance
+func NewMockWebSocketHub() *MockWebSocketHub <span class="cov0" title="0">{
+        return &amp;MockWebSocketHub{
+                Notifications: make([]NotificationRecord, 0),
+        }
+}</span>
+
+// Run starts the hub's main loop (no-op for mock)
+func (m *MockWebSocketHub) Run() <span class="cov0" title="0">{
+        m.Called()
+}</span>
+
+// Register adds a client to the hub
+func (m *MockWebSocketHub) Register(client *websocket.Client) <span class="cov0" title="0">{
+        m.Called(client)
+}</span>
+
+// Unregister removes a client from the hub
+func (m *MockWebSocketHub) Unregister(client *websocket.Client) <span class="cov0" title="0">{
+        m.Called(client)
+}</span>
+
+// Subscribe subscribes a client to a mailbox
+func (m *MockWebSocketHub) Subscribe(client *websocket.Client, mailboxID uint) <span class="cov0" title="0">{
+        m.Called(client, mailboxID)
+}</span>
+
+// Unsubscribe unsubscribes a client from a mailbox
+func (m *MockWebSocketHub) Unsubscribe(client *websocket.Client, mailboxID uint) <span class="cov0" title="0">{
+        m.Called(client, mailboxID)
+}</span>
+
+// BroadcastNewMessage broadcasts a new message notification to mailbox subscribers
+func (m *MockWebSocketHub) BroadcastNewMessage(mailboxID uint, payload *websocket.NewMessagePayload) <span class="cov0" title="0">{
+        m.Called(mailboxID, payload)
+        m.Notifications = append(m.Notifications, NotificationRecord{
+                MailboxID: mailboxID,
+                Payload:   payload,
+        })
+}</span>
+
+// GetNotifications returns all recorded notifications
+func (m *MockWebSocketHub) GetNotifications() []NotificationRecord <span class="cov0" title="0">{
+        return m.Notifications
+}</span>
+
+// ClearNotifications clears all recorded notifications
+func (m *MockWebSocketHub) ClearNotifications() <span class="cov0" title="0">{
+        m.Notifications = make([]NotificationRecord, 0)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
