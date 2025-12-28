@@ -1,0 +1,33 @@
+From: sender@example.com
+To: receiver@test.com
+Subject: Multipart Alternative Email
+Date: Mon, 29 Dec 2025 10:00:00 +0000
+Message-ID: <multipart-alt-001@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="boundary-alternative-123"
+
+--boundary-alternative-123
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+This is the plain text version of the email.
+
+Best regards,
+Test Sender
+
+--boundary-alternative-123
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Hello</h1>
+    <p>This is the <strong>HTML version</strong> of the email.</p>
+    <p>Best regards,<br>Test Sender</p>
+</body>
+</html>
+
+--boundary-alternative-123--

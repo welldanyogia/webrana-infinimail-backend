@@ -1,0 +1,25 @@
+From: sender@example.com
+To: receiver@test.com
+Subject: HTML Email
+Date: Mon, 29 Dec 2025 10:00:00 +0000
+Message-ID: <html-email-001@example.com>
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>HTML Email</title>
+</head>
+<body>
+    <h1>Hello World</h1>
+    <p>This is an <strong>HTML email</strong> for testing purposes.</p>
+    <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+        <li>Item 3</li>
+    </ul>
+    <p>Best regards,<br>Test Sender</p>
+</body>
+</html>

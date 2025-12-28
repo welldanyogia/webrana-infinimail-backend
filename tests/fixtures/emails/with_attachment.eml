@@ -1,0 +1,59 @@
+From: sender@example.com
+To: receiver@test.com
+Subject: Email with Attachment
+Date: Mon, 29 Dec 2025 10:00:00 +0000
+Message-ID: <attachment-001@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="boundary-mixed-456"
+
+--boundary-mixed-456
+Content-Type: multipart/alternative; boundary="boundary-alt-789"
+
+--boundary-alt-789
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Please find the attached document.
+
+Best regards,
+Test Sender
+
+--boundary-alt-789
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+<body>
+    <p>Hello,</p>
+    <p>Please find the <strong>attached document</strong>.</p>
+    <p>Best regards,<br>Test Sender</p>
+</body>
+</html>
+
+--boundary-alt-789--
+
+--boundary-mixed-456
+Content-Type: application/pdf; name="document.pdf"
+Content-Disposition: attachment; filename="document.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIK
+Pj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50
+IDEKL01lZGlhQm94IFswIDAgNjEyIDc5Ml0KPj4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUg
+L1BhZ2UKL1BhcmVudCAyIDAgUgo+PgplbmRvYmoKeHJlZgowIDQKMDAwMDAwMDAwMCA2NTUz
+NSBmIAowMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAwNjggMDAwMDAgbiAKMDAwMDAwMDE2
+NSAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDQKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVm
+CjIxNQolJUVPRgo=
+
+--boundary-mixed-456
+Content-Type: image/png; name="image.png"
+Content-Disposition: attachment; filename="image.png"
+Content-Transfer-Encoding: base64
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGA
+fdl1+AAAAABJRU5ErkJggg==
+
+--boundary-mixed-456--
