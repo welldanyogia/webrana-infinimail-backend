@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
-	gosmtp "github.com/emersion/go-smtp"
-	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/api"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/config"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/database"
+	seclogger "github.com/welldanyogia/webrana-infinimail-backend/internal/logger"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/smtp"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/storage"
@@ -80,29 +80,40 @@ func main() {
 	wsHub := ws.NewHub(logger)
 	go wsHub.Run()
 
+	// Initialize security logger
+	securityLogger := seclogger.NewSecurityLogger()
+
 	// Initialize repositories
 	domainRepo := repository.NewDomainRepository(db)
 	mailboxRepo := repository.NewMailboxRepository(db)
 	messageRepo := repository.NewMessageRepository(db)
 	attachmentRepo := repository.NewAttachmentRepository(db, fileStorage)
 
-	// Initialize HTTP router
+	// Parse allowed origins for CORS and WebSocket
+	var allowedOrigins []string
+	if origins := os.Getenv("ALLOWED_ORIGINS"); origins != "" {
+		allowedOrigins = strings.Split(origins, ",")
+	}
+
+	// Initialize HTTP router with security configuration
 	router := api.NewRouter(&api.RouterConfig{
-		DB:          db,
-		FileStorage: fileStorage,
-		Logger:      logger,
+		DB:             db,
+		FileStorage:    fileStorage,
+		Logger:         logger,
+		APIKey:         cfg.APIKey,
+		AllowedOrigins: allowedOrigins,
+		RateLimit:      int(cfg.RateLimitRequests),
+		RateBurst:      cfg.RateLimitBurst,
+		EnableAuth:     cfg.APIKey != "",
 	})
 
-	// Add WebSocket endpoint
-	upgrader := websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return true // Allow all origins for development
-		},
-	}
+	// Create secure WebSocket upgrader
+	upgrader := ws.NewSecureUpgrader(logger)
 
 	router.GET("/ws", func(c echo.Context) error {
 		conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 		if err != nil {
+			securityLogger.SuspiciousActivity(c.RealIP(), "/ws", "websocket_upgrade_failed")
 			logger.Error("websocket upgrade failed", slog.Any("error", err))
 			return err
 		}
@@ -116,7 +127,7 @@ func main() {
 		return nil
 	})
 
-	// Initialize SMTP server
+	// Initialize SMTP server with security configuration
 	smtpBackend := smtp.NewBackend(&smtp.BackendConfig{
 		DomainRepo:     domainRepo,
 		MailboxRepo:    mailboxRepo,
@@ -128,11 +139,15 @@ func main() {
 		Logger:         logger,
 	})
 
-	smtpServer := gosmtp.NewServer(smtpBackend)
-	smtpServer.Addr = fmt.Sprintf(":%d", cfg.SMTPPort)
-	smtpServer.Domain = "localhost"
-	smtpServer.AllowInsecureAuth = true
-	smtpServer.MaxMessageBytes = 25 * 1024 * 1024 // 25 MB
+	// Load SMTP security configuration from environment
+	smtpConfig := smtp.LoadServerConfigFromEnv()
+	smtpConfig.Addr = fmt.Sprintf(":%d", cfg.SMTPPort)
+	smtpServer := smtp.NewSecureServer(smtpBackend, smtpConfig)
+
+	logger.Info("SMTP server configured",
+		slog.Int64("max_message_bytes", smtpServer.MaxMessageBytes),
+		slog.Int("max_recipients", smtpServer.MaxRecipients),
+		slog.Bool("allow_insecure_auth", smtpServer.AllowInsecureAuth))
 
 	// Start servers
 	errChan := make(chan error, 2)

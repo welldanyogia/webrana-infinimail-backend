@@ -1,0 +1,1353 @@
+openapi: 3.0.3
+info:
+  title: Webrana Infinimail API
+  description: |
+    A comprehensive REST API for a temporary email service with SMTP server integration.
+    Provides endpoints for managing domains, mailboxes, messages, and attachments.
+
+    ## Authentication
+    All API endpoints (except `/health` and `/ready`) require API Key authentication.
+    Include the API key in the `Authorization` header using the Bearer token format:
+
+    ```
+    Authorization: Bearer YOUR_API_KEY
+    ```
+
+    The API key is configured via the `API_KEY` environment variable.
+
+    ## Features
+    - Domain management for email service
+    - Mailbox creation and management (with random mailbox generation)
+    - Message retrieval with read/unread tracking
+    - Attachment management with file download capability
+    - Pagination support for list endpoints
+    - Comprehensive error codes and messages
+    - Rate limiting and security headers
+
+  version: 1.0.0
+  contact:
+    name: Webrana Team
+    url: https://github.com/welldanyogia/webrana-infinimail-backend
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: |
+        API Key authentication using Bearer token.
+        Example: Authorization: Bearer abc123def456
+
+  schemas:
+    Domain:
+      type: object
+      description: Email domain managed by the service
+      properties:
+        id:
+          type: integer
+          format: uint32
+          example: 1
+          description: Unique domain identifier
+        name:
+          type: string
+          example: example.com
+          description: Domain name
+        is_active:
+          type: boolean
+          example: true
+          description: Whether the domain is active and can be used
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: Timestamp when domain was created
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: Timestamp when domain was last updated
+      required:
+        - id
+        - name
+        - is_active
+        - created_at
+        - updated_at
+
+    CreateDomainRequest:
+      type: object
+      description: Request body for creating a domain
+      properties:
+        name:
+          type: string
+          example: example.com
+          description: Domain name (must be unique)
+        is_active:
+          type: boolean
+          example: true
+          description: Optional. Whether the domain should be active. Defaults to true
+      required:
+        - name
+
+    UpdateDomainRequest:
+      type: object
+      description: Request body for updating a domain
+      properties:
+        name:
+          type: string
+          example: example.com
+          description: New domain name (optional)
+        is_active:
+          type: boolean
+          example: true
+          description: New active status (optional)
+
+    Mailbox:
+      type: object
+      description: Email address within a domain
+      properties:
+        id:
+          type: integer
+          format: uint32
+          example: 1
+          description: Unique mailbox identifier
+        local_part:
+          type: string
+          example: john.doe
+          description: Local part of the email address (before @)
+        domain_id:
+          type: integer
+          format: uint32
+          example: 1
+          description: ID of the domain this mailbox belongs to
+        full_address:
+          type: string
+          example: john.doe@example.com
+          description: Complete email address
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: Timestamp when mailbox was created
+        last_accessed_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-01-15T12:45:00Z"
+          description: Timestamp when mailbox was last accessed
+      required:
+        - id
+        - local_part
+        - domain_id
+        - full_address
+        - created_at
+
+    MailboxWithUnreadCount:
+      allOf:
+        - $ref: '#/components/schemas/Mailbox'
+        - type: object
+          properties:
+            unread_count:
+              type: integer
+              example: 3
+              description: Number of unread messages in this mailbox
+
+    CreateMailboxRequest:
+      type: object
+      description: Request body for creating a mailbox with specific local part
+      properties:
+        local_part:
+          type: string
+          example: john.doe
+          description: Local part of the email address
+        domain_id:
+          type: integer
+          format: uint32
+          example: 1
+          description: ID of the domain for this mailbox
+      required:
+        - local_part
+        - domain_id
+
+    CreateRandomMailboxRequest:
+      type: object
+      description: Request body for creating a mailbox with randomly generated local part
+      properties:
+        domain_id:
+          type: integer
+          format: uint32
+          example: 1
+          description: ID of the domain for this mailbox
+      required:
+        - domain_id
+
+    Message:
+      type: object
+      description: Email message received by a mailbox
+      properties:
+        id:
+          type: integer
+          format: uint32
+          example: 1
+          description: Unique message identifier
+        mailbox_id:
+          type: integer
+          format: uint32
+          example: 1
+          description: ID of the mailbox that received this message
+        sender_email:
+          type: string
+          format: email
+          example: sender@example.com
+          description: Email address of the message sender
+        sender_name:
+          type: string
+          example: John Smith
+          nullable: true
+          description: Display name of the sender
+        subject:
+          type: string
+          example: Important Update
+          nullable: true
+          description: Message subject line
+        snippet:
+          type: string
+          example: This is the first 255 characters of the message...
+          nullable: true
+          description: Brief preview of the message content
+        body_text:
+          type: string
+          nullable: true
+          description: Plain text version of the message body
+        body_html:
+          type: string
+          nullable: true
+          description: HTML version of the message body
+        is_read:
+          type: boolean
+          example: false
+          description: Whether the message has been read
+        received_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+          description: Timestamp when message was received
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+          description: List of attachments for this message
+      required:
+        - id
+        - mailbox_id
+        - sender_email
+        - is_read
+        - received_at
+
+    MessageListItem:
+      type: object
+      description: Lightweight message representation for list views
+      properties:
+        id:
+          type: integer
+          format: uint32
+          example: 1
+        mailbox_id:
+          type: integer
+          format: uint32
+          example: 1
+        sender_email:
+          type: string
+          format: email
+          example: sender@example.com
+        sender_name:
+          type: string
+          example: John Smith
+          nullable: true
+        subject:
+          type: string
+          example: Important Update
+          nullable: true
+        snippet:
+          type: string
+          example: This is the first 255 characters...
+          nullable: true
+        is_read:
+          type: boolean
+          example: false
+        received_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        attachment_count:
+          type: integer
+          example: 2
+          description: Number of attachments in this message
+      required:
+        - id
+        - mailbox_id
+        - sender_email
+        - is_read
+        - received_at
+        - attachment_count
+
+    Attachment:
+      type: object
+      description: File attachment in an email message
+      properties:
+        id:
+          type: integer
+          format: uint32
+          example: 1
+          description: Unique attachment identifier
+        message_id:
+          type: integer
+          format: uint32
+          example: 1
+          description: ID of the message containing this attachment
+        filename:
+          type: string
+          example: document.pdf
+          description: Original filename of the attachment
+        content_type:
+          type: string
+          example: application/pdf
+          description: MIME type of the attachment
+        file_path:
+          type: string
+          example: /attachments/2024/01/attachment-123.pdf
+          description: Internal file path where attachment is stored
+        size_bytes:
+          type: integer
+          format: int64
+          example: 102400
+          description: Size of the attachment in bytes
+      required:
+        - id
+        - message_id
+        - filename
+        - content_type
+        - file_path
+        - size_bytes
+
+    PaginationMeta:
+      type: object
+      description: Pagination information for list responses
+      properties:
+        total:
+          type: integer
+          format: int64
+          example: 50
+          description: Total number of items available
+        limit:
+          type: integer
+          example: 20
+          description: Maximum items returned in this response
+        offset:
+          type: integer
+          example: 0
+          description: Number of items skipped from the beginning
+      required:
+        - total
+        - limit
+        - offset
+
+    SuccessResponse:
+      type: object
+      description: Standard successful API response
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          description: Response payload (varies by endpoint)
+        message:
+          type: string
+          nullable: true
+          description: Optional success message
+      required:
+        - success
+        - data
+
+    PaginatedResponse:
+      type: object
+      description: Paginated list response
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: Array of items
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+      required:
+        - success
+        - data
+        - meta
+
+    ErrorResponse:
+      type: object
+      description: Error response format
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Domain not found
+          description: Error message
+        code:
+          type: string
+          example: NOT_FOUND
+          description: Error code for programmatic handling
+      required:
+        - success
+        - error
+
+    HealthResponse:
+      type: object
+      description: Health check response
+      properties:
+        status:
+          type: string
+          example: healthy
+          enum: [healthy, unhealthy]
+
+    ReadyResponse:
+      type: object
+      description: Readiness check response
+      properties:
+        status:
+          type: string
+          example: ready
+          enum: [ready, not_ready]
+        checks:
+          type: object
+          description: Status of individual health checks
+          additionalProperties:
+            type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Invalid request body
+            code: INVALID_INPUT
+
+    Unauthorized:
+      description: Authentication failed - missing or invalid API key
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Invalid API key
+              code:
+                type: string
+                example: UNAUTHORIZED
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Domain not found
+            code: NOT_FOUND
+
+    Conflict:
+      description: Resource already exists (duplicate entry)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Domain already exists
+            code: DUPLICATE_ENTRY
+
+    InternalError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Failed to create domain
+            code: INTERNAL_ERROR
+
+    RateLimited:
+      description: Too many requests (rate limited)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Rate limit exceeded
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: |
+        Returns the health status of the API server.
+        Does not require authentication.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+      security: []
+
+  /ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness check endpoint
+      description: |
+        Returns the readiness status of the API server.
+        Checks database connectivity and other dependencies.
+        Does not require authentication.
+      operationId: getReady
+      responses:
+        '200':
+          description: Server is ready to serve requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+              example:
+                status: ready
+                checks:
+                  database: connected
+      security: []
+
+  /api/domains:
+    post:
+      tags:
+        - Domains
+      summary: Create a new domain
+      description: Creates a new email domain that can be used for mailboxes.
+      operationId: createDomain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDomainRequest'
+            example:
+              name: example.com
+              is_active: true
+      responses:
+        '201':
+          description: Domain created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 1
+                  name: example.com
+                  is_active: true
+                  created_at: "2024-01-15T10:30:00Z"
+                  updated_at: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Domain already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Domain already exists
+                code: DUPLICATE_ENTRY
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags:
+        - Domains
+      summary: List all domains
+      description: |
+        Retrieves a list of all domains.
+        Can be filtered to show only active domains.
+      operationId: listDomains
+      parameters:
+        - name: active_only
+          in: query
+          description: If true, only returns active domains
+          schema:
+            type: boolean
+            default: false
+          example: false
+      responses:
+        '200':
+          description: List of domains retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  - id: 1
+                    name: example.com
+                    is_active: true
+                    created_at: "2024-01-15T10:30:00Z"
+                    updated_at: "2024-01-15T10:30:00Z"
+                  - id: 2
+                    name: test.com
+                    is_active: false
+                    created_at: "2024-01-14T08:15:00Z"
+                    updated_at: "2024-01-14T08:15:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/domains/{id}:
+    get:
+      tags:
+        - Domains
+      summary: Get a specific domain
+      description: Retrieves details of a specific domain by ID.
+      operationId: getDomain
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Domain ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '200':
+          description: Domain retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 1
+                  name: example.com
+                  is_active: true
+                  created_at: "2024-01-15T10:30:00Z"
+                  updated_at: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags:
+        - Domains
+      summary: Update a domain
+      description: Updates an existing domain's properties.
+      operationId: updateDomain
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Domain ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDomainRequest'
+            example:
+              name: newexample.com
+              is_active: false
+      responses:
+        '200':
+          description: Domain updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 1
+                  name: newexample.com
+                  is_active: false
+                  created_at: "2024-01-15T10:30:00Z"
+                  updated_at: "2024-01-15T11:45:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags:
+        - Domains
+      summary: Delete a domain
+      description: Deletes a domain and all associated mailboxes and messages.
+      operationId: deleteDomain
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Domain ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '204':
+          description: Domain deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/mailboxes:
+    post:
+      tags:
+        - Mailboxes
+      summary: Create a mailbox with specific local part
+      description: |
+        Creates a new mailbox with a specified local part (email prefix).
+        Requires the domain to be active.
+      operationId: createMailbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMailboxRequest'
+            example:
+              local_part: john.doe
+              domain_id: 1
+      responses:
+        '201':
+          description: Mailbox created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 1
+                  local_part: john.doe
+                  domain_id: 1
+                  full_address: john.doe@example.com
+                  created_at: "2024-01-15T10:30:00Z"
+                  last_accessed_at: null
+        '400':
+          description: Invalid request or domain not active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Domain is not active
+                code: INVALID_INPUT
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Domain not found
+                code: NOT_FOUND
+        '409':
+          description: Mailbox already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Mailbox already exists
+                code: DUPLICATE_ENTRY
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags:
+        - Mailboxes
+      summary: List mailboxes for a domain
+      description: |
+        Retrieves a paginated list of mailboxes for a specific domain.
+        Requires domain_id query parameter.
+      operationId: listMailboxes
+      parameters:
+        - name: domain_id
+          in: query
+          required: true
+          description: Filter mailboxes by domain ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+        - name: limit
+          in: query
+          description: Maximum number of items to return (default 20)
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+          example: 20
+        - name: offset
+          in: query
+          description: Number of items to skip from the beginning (default 0)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+      responses:
+        '200':
+          description: List of mailboxes retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+              example:
+                success: true
+                data:
+                  - id: 1
+                    local_part: john.doe
+                    domain_id: 1
+                    full_address: john.doe@example.com
+                    created_at: "2024-01-15T10:30:00Z"
+                    last_accessed_at: "2024-01-15T12:45:00Z"
+                meta:
+                  total: 50
+                  limit: 20
+                  offset: 0
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/mailboxes/random:
+    post:
+      tags:
+        - Mailboxes
+      summary: Create a mailbox with random local part
+      description: |
+        Creates a new mailbox with an automatically generated random local part.
+        Useful for temporary email addresses.
+        The local part is an 8-character alphanumeric string.
+      operationId: createRandomMailbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRandomMailboxRequest'
+            example:
+              domain_id: 1
+      responses:
+        '201':
+          description: Random mailbox created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 1
+                  local_part: abc12345
+                  domain_id: 1
+                  full_address: abc12345@example.com
+                  created_at: "2024-01-15T10:30:00Z"
+                  last_accessed_at: null
+        '400':
+          description: Invalid request or domain not active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Domain is not active
+                code: INVALID_INPUT
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Domain not found
+                code: NOT_FOUND
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/mailboxes/{id}:
+    get:
+      tags:
+        - Mailboxes
+      summary: Get a specific mailbox
+      description: |
+        Retrieves details of a specific mailbox.
+        Also updates the mailbox's last_accessed_at timestamp.
+      operationId: getMailbox
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Mailbox ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '200':
+          description: Mailbox retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 1
+                  local_part: john.doe
+                  domain_id: 1
+                  full_address: john.doe@example.com
+                  created_at: "2024-01-15T10:30:00Z"
+                  last_accessed_at: "2024-01-15T12:45:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags:
+        - Mailboxes
+      summary: Delete a mailbox
+      description: |
+        Deletes a mailbox and all associated messages and attachments.
+      operationId: deleteMailbox
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Mailbox ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '204':
+          description: Mailbox deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/mailboxes/{mailbox_id}/messages:
+    get:
+      tags:
+        - Messages
+      summary: List messages for a mailbox
+      description: |
+        Retrieves a paginated list of messages received by a specific mailbox.
+      operationId: listMessagesByMailbox
+      parameters:
+        - name: mailbox_id
+          in: path
+          required: true
+          description: Mailbox ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+        - name: limit
+          in: query
+          description: Maximum number of items to return (default 20)
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+          example: 20
+        - name: offset
+          in: query
+          description: Number of items to skip from the beginning (default 0)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+      responses:
+        '200':
+          description: List of messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+              example:
+                success: true
+                data:
+                  - id: 1
+                    mailbox_id: 1
+                    sender_email: sender@example.com
+                    sender_name: John Smith
+                    subject: Hello World
+                    snippet: This is a test message...
+                    is_read: false
+                    received_at: "2024-01-15T10:30:00Z"
+                    attachment_count: 0
+                meta:
+                  total: 15
+                  limit: 20
+                  offset: 0
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Mailbox not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Mailbox not found
+                code: NOT_FOUND
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/messages/{id}:
+    get:
+      tags:
+        - Messages
+      summary: Get a specific message
+      description: |
+        Retrieves full details of a specific message including body and attachments.
+        Automatically marks the message as read upon retrieval.
+      operationId: getMessage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Message ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '200':
+          description: Message retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 1
+                  mailbox_id: 1
+                  sender_email: sender@example.com
+                  sender_name: John Smith
+                  subject: Hello World
+                  snippet: This is a test message...
+                  body_text: "This is a test message body in plain text"
+                  body_html: "<html><body>This is a test message body in HTML</body></html>"
+                  is_read: true
+                  received_at: "2024-01-15T10:30:00Z"
+                  attachments:
+                    - id: 1
+                      message_id: 1
+                      filename: document.pdf
+                      content_type: application/pdf
+                      file_path: /attachments/2024/01/attachment-123.pdf
+                      size_bytes: 102400
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/messages/{id}/read:
+    patch:
+      tags:
+        - Messages
+      summary: Mark a message as read
+      description: Marks a message as read without retrieving its full content.
+      operationId: markMessageAsRead
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Message ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '200':
+          description: Message marked as read successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: Message marked as read
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/messages/{id}/delete:
+    delete:
+      tags:
+        - Messages
+      summary: Delete a message
+      description: |
+        Deletes a message and all its associated attachments.
+      operationId: deleteMessage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Message ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '204':
+          description: Message deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/messages/{message_id}/attachments:
+    get:
+      tags:
+        - Attachments
+      summary: List attachments for a message
+      description: Retrieves all attachments associated with a specific message.
+      operationId: listAttachments
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          description: Message ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '200':
+          description: List of attachments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  - id: 1
+                    message_id: 1
+                    filename: document.pdf
+                    content_type: application/pdf
+                    file_path: /attachments/2024/01/attachment-123.pdf
+                    size_bytes: 102400
+                  - id: 2
+                    message_id: 1
+                    filename: image.jpg
+                    content_type: image/jpeg
+                    file_path: /attachments/2024/01/attachment-124.jpg
+                    size_bytes: 256000
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Message not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Message not found
+                code: NOT_FOUND
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/attachments/{id}:
+    get:
+      tags:
+        - Attachments
+      summary: Get attachment details
+      description: Retrieves metadata for a specific attachment.
+      operationId: getAttachment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Attachment ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '200':
+          description: Attachment details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 1
+                  message_id: 1
+                  filename: document.pdf
+                  content_type: application/pdf
+                  file_path: /attachments/2024/01/attachment-123.pdf
+                  size_bytes: 102400
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/attachments/{id}/download:
+    get:
+      tags:
+        - Attachments
+      summary: Download an attachment
+      description: |
+        Downloads the actual file content of an attachment.
+        Returns the file with appropriate Content-Type and Content-Disposition headers.
+      operationId: downloadAttachment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Attachment ID
+          schema:
+            type: integer
+            format: uint32
+          example: 1
+      responses:
+        '200':
+          description: Attachment file downloaded successfully
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+tags:
+  - name: Health
+    description: Server health and readiness endpoints
+  - name: Domains
+    description: Email domain management
+  - name: Mailboxes
+    description: Email mailbox/address management
+  - name: Messages
+    description: Email message retrieval and management
+  - name: Attachments
+    description: Email attachment handling and download

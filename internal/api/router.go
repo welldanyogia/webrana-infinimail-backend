@@ -2,6 +2,8 @@ package api
 
 import (
 	"log/slog"
+	"os"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/api/handlers"
@@ -16,6 +18,12 @@ type RouterConfig struct {
 	DB          *gorm.DB
 	FileStorage storage.FileStorage
 	Logger      *slog.Logger
+	// Security configuration
+	APIKey         string   // API key for authentication (empty = disabled)
+	AllowedOrigins []string // Allowed CORS origins
+	RateLimit      int      // Requests per second (0 = use env default)
+	RateBurst      int      // Burst size for rate limiter
+	EnableAuth     bool     // Enable API key authentication
 }
 
 // NewRouter creates and configures the Echo router with all routes
@@ -23,9 +31,27 @@ func NewRouter(cfg *RouterConfig) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 
-	// Middleware
+	// Security Middleware (applied in correct order)
+	// 1. Recover from panics
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
+
+	// 2. Security headers (applied to all responses)
+	e.Use(middleware.SecureHeaders())
+
+	// 3. CORS - Set environment variable if origins provided in config
+	if len(cfg.AllowedOrigins) > 0 {
+		os.Setenv("ALLOWED_ORIGINS", strings.Join(cfg.AllowedOrigins, ","))
+	}
+	e.Use(middleware.SecureCORS())
+
+	// 4. Rate limiting - use RateLimiterWithConfig if custom values provided
+	if cfg.RateLimit > 0 {
+		e.Use(middleware.RateLimiterWithConfig(float64(cfg.RateLimit), cfg.RateBurst, cfg.Logger))
+	} else {
+		e.Use(middleware.RateLimiter(cfg.Logger))
+	}
+
+	// 5. Request logging
 	if cfg.Logger != nil {
 		e.Use(middleware.RequestLogger(cfg.Logger))
 	}
@@ -43,12 +69,19 @@ func NewRouter(cfg *RouterConfig) *echo.Echo {
 	messageHandler := handlers.NewMessageHandler(messageRepo, mailboxRepo)
 	attachmentHandler := handlers.NewAttachmentHandler(attachmentRepo, messageRepo, cfg.FileStorage)
 
-	// Health routes
+	// Health routes (no auth required)
 	e.GET("/health", healthHandler.Health)
 	e.GET("/ready", healthHandler.Ready)
 
 	// API routes
 	api := e.Group("/api")
+
+	// Apply API key authentication if enabled
+	// Set API_KEY env var if provided in config
+	if cfg.EnableAuth && cfg.APIKey != "" {
+		os.Setenv("API_KEY", cfg.APIKey)
+	}
+	api.Use(middleware.APIKeyAuth(cfg.Logger))
 
 	// Domain routes
 	domains := api.Group("/domains")
