@@ -1,0 +1,25 @@
+# Trivy Ignore File
+# Use this file to suppress false positives or accepted risks
+# Format: CVE-ID or Package-Name
+# Documentation: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/
+
+# Example ignored vulnerabilities (remove or modify as needed):
+
+# Alpine base image vulnerabilities that are not exploitable in this context
+# CVE-2023-XXXXX
+
+# Development dependencies (not in production)
+# Uncomment if testcontainers vulnerabilities are flagged
+# CVE-2024-XXXXX # testcontainers-go - dev only
+
+# Known false positives
+# Add specific CVEs here that are verified as false positives
+
+# Temporary suppressions (always add expiration comment)
+# CVE-2024-XXXXX # Expires: 2025-02-01, Waiting for upstream fix
+
+# Instructions:
+# 1. Only add entries after thorough security review
+# 2. Always add a comment explaining why it's ignored
+# 3. Set expiration dates for temporary suppressions
+# 4. Periodically review and clean up this file

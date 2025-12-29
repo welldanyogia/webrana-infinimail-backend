@@ -87,14 +87,65 @@ func TestValidateProduction_NoSSLDisable(t *testing.T) {
 
 func TestValidateProduction_ValidConfig(t *testing.T) {
 	cfg := &Config{
-		DatabaseURL:    "postgres://localhost/test?sslmode=require",
-		AppEnv:         "production",
-		APIKey:         "test-key",
-		AllowedOrigins: "http://example.com",
+		DatabaseURL:      "postgres://localhost/test?sslmode=require",
+		AppEnv:           "production",
+		APIKey:           "test-key",
+		AllowedOrigins:   "http://example.com",
+		ACMEStaging:      false,
+		ACMEEmail:        "admin@example.com",
+		ACMEDirectoryURL: "https://acme-v02.api.letsencrypt.org/directory",
 	}
 
 	err := cfg.ValidateProduction()
 	assert.NoError(t, err)
+}
+
+func TestValidateProduction_ACMEStagingNotAllowed(t *testing.T) {
+	cfg := &Config{
+		DatabaseURL:      "postgres://localhost/test?sslmode=require",
+		AppEnv:           "production",
+		APIKey:           "test-key",
+		AllowedOrigins:   "http://example.com",
+		ACMEStaging:      true,
+		ACMEEmail:        "admin@example.com",
+		ACMEDirectoryURL: "https://acme-v02.api.letsencrypt.org/directory",
+	}
+
+	err := cfg.ValidateProduction()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ACME_STAGING must be false")
+}
+
+func TestValidateProduction_ACMEEmailRequired(t *testing.T) {
+	cfg := &Config{
+		DatabaseURL:      "postgres://localhost/test?sslmode=require",
+		AppEnv:           "production",
+		APIKey:           "test-key",
+		AllowedOrigins:   "http://example.com",
+		ACMEStaging:      false,
+		ACMEEmail:        "",
+		ACMEDirectoryURL: "https://acme-v02.api.letsencrypt.org/directory",
+	}
+
+	err := cfg.ValidateProduction()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ACME_EMAIL is required")
+}
+
+func TestValidateProduction_ACMEStagingURLNotAllowed(t *testing.T) {
+	cfg := &Config{
+		DatabaseURL:      "postgres://localhost/test?sslmode=require",
+		AppEnv:           "production",
+		APIKey:           "test-key",
+		AllowedOrigins:   "http://example.com",
+		ACMEStaging:      false,
+		ACMEEmail:        "admin@example.com",
+		ACMEDirectoryURL: "https://acme-staging-v02.api.letsencrypt.org/directory",
+	}
+
+	err := cfg.ValidateProduction()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ACME_DIRECTORY_URL should use production endpoint")
 }
 
 func TestLoadWithValidation_FailFast(t *testing.T) {
@@ -176,4 +227,104 @@ func TestLoad_SecurityConfig(t *testing.T) {
 	assert.Equal(t, "staging", cfg.AppEnv)
 	assert.Equal(t, 20.0, cfg.RateLimitRequests)
 	assert.Equal(t, 50, cfg.RateLimitBurst)
+}
+
+func TestLoad_ACMEConfig(t *testing.T) {
+	os.Setenv("DATABASE_URL", "postgres://localhost/test")
+	os.Setenv("ACME_DIRECTORY_URL", "https://acme-v02.api.letsencrypt.org/directory")
+	os.Setenv("ACME_EMAIL", "admin@example.com")
+	os.Setenv("ACME_STAGING", "false")
+	os.Setenv("CERT_STORAGE_PATH", "/etc/certs")
+	os.Setenv("CERT_RENEWAL_DAYS", "14")
+	os.Setenv("CERT_RENEWAL_CHECK_INTERVAL", "12h")
+	defer func() {
+		os.Unsetenv("DATABASE_URL")
+		os.Unsetenv("ACME_DIRECTORY_URL")
+		os.Unsetenv("ACME_EMAIL")
+		os.Unsetenv("ACME_STAGING")
+		os.Unsetenv("CERT_STORAGE_PATH")
+		os.Unsetenv("CERT_RENEWAL_DAYS")
+		os.Unsetenv("CERT_RENEWAL_CHECK_INTERVAL")
+	}()
+
+	cfg, err := Load()
+	require.NoError(t, err)
+
+	assert.Equal(t, "https://acme-v02.api.letsencrypt.org/directory", cfg.ACMEDirectoryURL)
+	assert.Equal(t, "admin@example.com", cfg.ACMEEmail)
+	assert.False(t, cfg.ACMEStaging)
+	assert.Equal(t, "/etc/certs", cfg.CertStoragePath)
+	assert.Equal(t, 14, cfg.CertRenewalDays)
+	assert.Equal(t, "12h", cfg.CertRenewalCheckInterval)
+}
+
+func TestLoad_ACMEConfigDefaults(t *testing.T) {
+	os.Setenv("DATABASE_URL", "postgres://localhost/test")
+	defer os.Unsetenv("DATABASE_URL")
+
+	cfg, err := Load()
+	require.NoError(t, err)
+
+	// Check ACME defaults
+	assert.Equal(t, "https://acme-staging-v02.api.letsencrypt.org/directory", cfg.ACMEDirectoryURL)
+	assert.Equal(t, "", cfg.ACMEEmail)
+	assert.True(t, cfg.ACMEStaging)
+	assert.Equal(t, "./certs", cfg.CertStoragePath)
+	assert.Equal(t, 30, cfg.CertRenewalDays)
+	assert.Equal(t, "24h", cfg.CertRenewalCheckInterval)
+}
+
+func TestLoad_DNSGuideConfig(t *testing.T) {
+	os.Setenv("DATABASE_URL", "postgres://localhost/test")
+	os.Setenv("SMTP_HOSTNAME", "mail.example.com")
+	os.Setenv("SERVER_IP", "192.168.1.100")
+	defer func() {
+		os.Unsetenv("DATABASE_URL")
+		os.Unsetenv("SMTP_HOSTNAME")
+		os.Unsetenv("SERVER_IP")
+	}()
+
+	cfg, err := Load()
+	require.NoError(t, err)
+
+	assert.Equal(t, "mail.example.com", cfg.SMTPHostname)
+	assert.Equal(t, "192.168.1.100", cfg.ServerIP)
+}
+
+func TestLoad_DNSGuideConfigDefaults(t *testing.T) {
+	os.Setenv("DATABASE_URL", "postgres://localhost/test")
+	defer os.Unsetenv("DATABASE_URL")
+
+	cfg, err := Load()
+	require.NoError(t, err)
+
+	// Check DNS guide defaults
+	assert.Equal(t, "mail.infinimail.local", cfg.SMTPHostname)
+	assert.Equal(t, "127.0.0.1", cfg.ServerIP)
+}
+
+func TestLoad_InvalidACMEStaging(t *testing.T) {
+	os.Setenv("DATABASE_URL", "postgres://localhost/test")
+	os.Setenv("ACME_STAGING", "invalid")
+	defer func() {
+		os.Unsetenv("DATABASE_URL")
+		os.Unsetenv("ACME_STAGING")
+	}()
+
+	_, err := Load()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ACME_STAGING must be a valid boolean")
+}
+
+func TestLoad_InvalidCertRenewalDays(t *testing.T) {
+	os.Setenv("DATABASE_URL", "postgres://localhost/test")
+	os.Setenv("CERT_RENEWAL_DAYS", "invalid")
+	defer func() {
+		os.Unsetenv("DATABASE_URL")
+		os.Unsetenv("CERT_RENEWAL_DAYS")
+	}()
+
+	_, err := Load()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "CERT_RENEWAL_DAYS must be a valid integer")
 }

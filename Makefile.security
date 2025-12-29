@@ -1,0 +1,111 @@
+# Security Scanning Makefile for Infinimail Backend
+# Include in main Makefile with: include Makefile.security
+
+.PHONY: security-scan gosec-scan trivy-scan trivy-image gitleaks-scan nancy-scan govulncheck-scan security-install security-clean
+
+# Run all security scans
+security-scan: gosec-scan gitleaks-scan trivy-scan nancy-scan govulncheck-scan
+	@echo "=================================================="
+	@echo "✅ All security scans complete!"
+	@echo "=================================================="
+	@echo "Review reports:"
+	@echo "  - gosec-report.json"
+	@echo "  - trivy-report.json"
+	@echo "  - gitleaks-report.json"
+	@echo "  - nancy-report.txt"
+	@echo "  - govulncheck-results.json"
+	@echo "=================================================="
+
+# gosec - Go security scanner
+gosec-scan:
+	@echo "Running gosec security scanner..."
+	@gosec -fmt=json -out=gosec-report.json -exclude-dir=tests ./... || true
+	@gosec -fmt=text -exclude-dir=tests ./... || true
+	@echo "✅ gosec scan complete (report: gosec-report.json)"
+
+# Trivy - Filesystem and dependency scanner
+trivy-scan:
+	@echo "Running Trivy filesystem scanner..."
+	@trivy fs --format json --output trivy-report.json --severity HIGH,CRITICAL . || true
+	@trivy fs --severity HIGH,CRITICAL .
+	@echo "✅ Trivy filesystem scan complete (report: trivy-report.json)"
+
+# Trivy - Docker image scanner
+trivy-image:
+	@echo "Building Docker image for scanning..."
+	@docker build -t infinimail-backend:security-scan .
+	@echo "Running Trivy container scanner..."
+	@trivy image --format json --output trivy-image-report.json --severity HIGH,CRITICAL infinimail-backend:security-scan || true
+	@trivy image --severity HIGH,CRITICAL infinimail-backend:security-scan
+	@echo "✅ Trivy image scan complete (report: trivy-image-report.json)"
+
+# Gitleaks - Secret scanner
+gitleaks-scan:
+	@echo "Running Gitleaks secret scanner..."
+	@gitleaks detect --source . --report-path gitleaks-report.json -v || true
+	@echo "✅ Gitleaks scan complete (report: gitleaks-report.json)"
+
+# Nancy - Go dependency vulnerability scanner
+nancy-scan:
+	@echo "Running Nancy dependency scanner..."
+	@go list -json -deps ./... | nancy sleuth > nancy-report.txt 2>&1 || true
+	@cat nancy-report.txt
+	@echo "✅ Nancy scan complete (report: nancy-report.txt)"
+
+# govulncheck - Official Go vulnerability scanner
+govulncheck-scan:
+	@echo "Running govulncheck..."
+	@govulncheck -json ./... > govulncheck-results.json 2>&1 || true
+	@govulncheck ./... || true
+	@echo "✅ govulncheck scan complete (report: govulncheck-results.json)"
+
+# Install security scanning tools
+security-install:
+	@echo "Installing security scanning tools..."
+	@echo "Installing gosec..."
+	@go install github.com/securego/gosec/v2/cmd/gosec@latest
+	@echo "Installing gitleaks..."
+	@which gitleaks > /dev/null 2>&1 || (echo "Please install gitleaks manually: https://github.com/gitleaks/gitleaks#installing" && exit 1)
+	@echo "Installing trivy..."
+	@which trivy > /dev/null 2>&1 || (echo "Please install trivy manually: https://aquasecurity.github.io/trivy/latest/getting-started/installation/" && exit 1)
+	@echo "Installing nancy..."
+	@go install github.com/sonatype-nexus-community/nancy@latest
+	@echo "Installing govulncheck..."
+	@go install golang.org/x/vuln/cmd/govulncheck@latest
+	@echo "✅ Security tools installed successfully!"
+
+# Quick security scan (gosec + gitleaks only, fast)
+security-quick: gosec-scan gitleaks-scan
+	@echo "✅ Quick security scan complete!"
+
+# CI-friendly security scan (fails on findings)
+security-ci:
+	@echo "Running CI security scans..."
+	@gosec -fmt=json -out=gosec-ci.json -exclude-dir=tests ./...
+	@trivy fs --exit-code 1 --severity CRITICAL --format json --output trivy-ci.json .
+	@gitleaks detect --source . --exit-code 1 -v
+	@govulncheck ./...
+	@echo "✅ CI security scans passed!"
+
+# Clean security scan artifacts
+security-clean:
+	@echo "Cleaning security scan artifacts..."
+	@rm -f gosec-report.json trivy-report.json trivy-image-report.json gitleaks-report.json nancy-report.txt govulncheck-results.json
+	@rm -f gosec-ci.json trivy-ci.json
+	@docker rmi infinimail-backend:security-scan 2>/dev/null || true
+	@echo "✅ Security artifacts cleaned"
+
+# Security scan help
+security-help:
+	@echo "Security Scanning Targets:"
+	@echo "  make security-scan          - Run all security scans"
+	@echo "  make security-quick         - Run quick security scan (gosec + gitleaks)"
+	@echo "  make security-ci            - CI-friendly scan (fails on findings)"
+	@echo "  make gosec-scan             - Run gosec Go security scanner"
+	@echo "  make trivy-scan             - Run Trivy filesystem scanner"
+	@echo "  make trivy-image            - Run Trivy Docker image scanner"
+	@echo "  make gitleaks-scan          - Run Gitleaks secret scanner"
+	@echo "  make nancy-scan             - Run Nancy dependency scanner"
+	@echo "  make govulncheck-scan       - Run official Go vulnerability scanner"
+	@echo "  make security-install       - Install security scanning tools"
+	@echo "  make security-clean         - Clean security scan artifacts"

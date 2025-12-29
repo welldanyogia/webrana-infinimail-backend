@@ -1,0 +1,77 @@
+# Pre-commit hooks for security and code quality
+# Install: pip install pre-commit or brew install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Gitleaks - Secret scanning
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.1
+    hooks:
+      - id: gitleaks
+        name: Gitleaks - Secret Scanner
+        description: Scan for hardcoded secrets, API keys, passwords
+
+  # golangci-lint - Comprehensive Go linting
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.55.2
+    hooks:
+      - id: golangci-lint
+        name: golangci-lint
+        description: Run golangci-lint with security-focused config
+        args: [--config=.golangci.yml]
+
+  # Local hooks for Go-specific tools
+  - repo: local
+    hooks:
+      # gosec - Go security scanner
+      - id: gosec
+        name: gosec - Go Security Scanner
+        description: Scan for security vulnerabilities in Go code
+        entry: gosec
+        args: [-exclude-dir=tests, ./...]
+        language: system
+        pass_filenames: false
+        types: [go]
+
+      # Go formatting
+      - id: go-fmt
+        name: go fmt
+        description: Format Go code
+        entry: gofmt
+        args: [-w, -s]
+        language: system
+        types: [go]
+
+      # Go imports
+      - id: go-imports
+        name: goimports
+        description: Fix Go imports
+        entry: goimports
+        args: [-w]
+        language: system
+        types: [go]
+
+      # Go vet
+      - id: go-vet
+        name: go vet
+        description: Run go vet
+        entry: go
+        args: [vet, ./...]
+        language: system
+        pass_filenames: false
+        types: [go]
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=5000]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]

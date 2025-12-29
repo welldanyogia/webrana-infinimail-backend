@@ -1,0 +1,245 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'webrana-infinimail-backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'webrana-infinimail-backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+defaults:
+  run:
+    working-directory: webrana-infinimail-backend
+
+env:
+  GO_VERSION: '1.24.x'
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: webrana-infinimail-backend/go.sum
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: webrana-infinimail-backend
+          args: --timeout=5m --verbose
+
+      - name: Check code formatting
+        run: |
+          if [ -n "$(gofmt -s -l .)" ]; then
+            echo "Go code is not formatted:"
+            gofmt -s -d .
+            exit 1
+          fi
+
+  test-unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.24.0', '1.24.x']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache-dependency-path: webrana-infinimail-backend/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Run unit tests
+        run: make test-unit
+
+      - name: Generate coverage report
+        if: matrix.go-version == '1.24.x'
+        run: |
+          go test ./internal/... -short -coverprofile=coverage-unit.out -covermode=atomic
+          go tool cover -func=coverage-unit.out
+
+      - name: Upload coverage to artifacts
+        if: matrix.go-version == '1.24.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: webrana-infinimail-backend/coverage-unit.out
+          retention-days: 5
+
+      - name: Upload coverage to Codecov
+        if: matrix.go-version == '1.24.x'
+        uses: codecov/codecov-action@v4
+        with:
+          files: webrana-infinimail-backend/coverage-unit.out
+          flags: unit
+          name: unit-tests-${{ matrix.go-version }}
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-race:
+    name: Race Condition Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: webrana-infinimail-backend/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run race detector
+        run: make test-race
+
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: infinimail_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: webrana-infinimail-backend/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run integration tests
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/infinimail_test?sslmode=disable
+          TEST_DATABASE_URL: postgres://test:test@localhost:5432/infinimail_test?sslmode=disable
+        run: make test-integration
+
+      - name: Generate integration coverage
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/infinimail_test?sslmode=disable
+        run: |
+          go test -tags=integration -coverprofile=coverage-integration.out -covermode=atomic ./tests/integration/...
+          go tool cover -func=coverage-integration.out
+
+      - name: Upload integration coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: webrana-infinimail-backend/coverage-integration.out
+          flags: integration
+          name: integration-tests
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  build-test:
+    name: Build Binary
+    runs-on: ubuntu-latest
+    needs: [lint, test-unit, test-race]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: webrana-infinimail-backend/go.sum
+
+      - name: Build binary
+        run: make build
+
+      - name: Verify binary
+        run: |
+          ./bin/server --version || echo "Binary built successfully"
+          file ./bin/server
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: infinimail-backend-binary
+          path: webrana-infinimail-backend/bin/server
+          retention-days: 5
+
+  coverage-report:
+    name: Combined Coverage Report
+    runs-on: ubuntu-latest
+    needs: [test-unit, test-integration]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: webrana-infinimail-backend/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Generate combined coverage
+        run: make test-coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            webrana-infinimail-backend/coverage.out
+            webrana-infinimail-backend/coverage.html
+          retention-days: 30
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: webrana-infinimail-backend/coverage.out
+          flags: combined
+          name: combined-coverage
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Coverage Summary
+        run: |
+          echo "### Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=coverage.out >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

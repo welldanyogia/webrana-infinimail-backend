@@ -96,38 +96,6 @@ func main() {
 		allowedOrigins = strings.Split(origins, ",")
 	}
 
-	// Initialize HTTP router with security configuration
-	router := api.NewRouter(&api.RouterConfig{
-		DB:             db,
-		FileStorage:    fileStorage,
-		Logger:         logger,
-		APIKey:         cfg.APIKey,
-		AllowedOrigins: allowedOrigins,
-		RateLimit:      int(cfg.RateLimitRequests),
-		RateBurst:      cfg.RateLimitBurst,
-		EnableAuth:     cfg.APIKey != "",
-	})
-
-	// Create secure WebSocket upgrader
-	upgrader := ws.NewSecureUpgrader(logger)
-
-	router.GET("/ws", func(c echo.Context) error {
-		conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-		if err != nil {
-			securityLogger.SuspiciousActivity(c.RealIP(), "/ws", "websocket_upgrade_failed")
-			logger.Error("websocket upgrade failed", slog.Any("error", err))
-			return err
-		}
-
-		client := ws.NewClient(wsHub, conn, logger)
-		wsHub.Register(client)
-
-		go client.WritePump()
-		go client.ReadPump()
-
-		return nil
-	})
-
 	// Initialize SMTP server with security configuration
 	smtpBackend := smtp.NewBackend(&smtp.BackendConfig{
 		DomainRepo:     domainRepo,
@@ -176,6 +144,120 @@ func main() {
 		}
 	}
 
+	// Initialize SSL Domain Setup services
+	// Domain Manager Service
+	domainManagerConfig := services.DomainManagerConfig{
+		SMTPHostname: cfg.SMTPHostname,
+		ServerIP:     cfg.ServerIP,
+	}
+	domainManager := services.NewDomainManagerService(domainRepo, domainManagerConfig)
+
+	// DNS Verifier Service
+	dnsVerifierConfig := services.DNSVerifierConfig{
+		SMTPHostname:   cfg.SMTPHostname,
+		ServerIP:       cfg.ServerIP,
+		MaxRetries:     3,
+		RetryDelay:     5 * time.Second,
+		LookupTimeout:  10 * time.Second,
+	}
+	dnsVerifier := services.NewDNSVerifierService(domainRepo, dnsVerifierConfig)
+
+	// DNS Exporter
+	dnsExporter := services.NewDNSExporter()
+
+	// ACME Client
+	acmeConfig := services.ACMEClientConfig{
+		DirectoryURL: cfg.ACMEDirectoryURL,
+		Email:        cfg.ACMEEmail,
+		Staging:      cfg.ACMEStaging,
+	}
+	acmeClient, err := services.NewACMEClient(acmeConfig)
+	if err != nil {
+		logger.Warn("failed to initialize ACME client, certificate generation disabled", slog.Any("error", err))
+	}
+
+	// Certificate Manager Service
+	var certManager services.CertificateManagerService
+	var certRenewalService *services.CertRenewalService
+	if acmeClient != nil && certStorage != nil {
+		certManagerConfig := services.CertificateManagerConfig{
+			RenewalDays:     cfg.CertRenewalDays,
+			CertStoragePath: cfg.CertStoragePath,
+		}
+		certManager = services.NewCertificateManagerService(
+			acmeClient,
+			certStorage,
+			certRepo,
+			domainRepo,
+			domainManager,
+			certManagerConfig,
+		)
+		// Set certificate store for hot reload notifications
+		if certStore != nil {
+			certManager.SetCertificateStore(certStore)
+		}
+		logger.Info("certificate manager initialized",
+			slog.String("acme_directory", cfg.ACMEDirectoryURL),
+			slog.Bool("staging", cfg.ACMEStaging),
+			slog.Int("renewal_days", cfg.CertRenewalDays))
+
+		// Initialize Certificate Renewal Service (auto-renewal background job)
+		checkInterval, err := time.ParseDuration(cfg.CertRenewalCheckInterval)
+		if err != nil {
+			logger.Warn("invalid CERT_RENEWAL_CHECK_INTERVAL, using default 24h",
+				slog.String("value", cfg.CertRenewalCheckInterval),
+				slog.Any("error", err))
+			checkInterval = 24 * time.Hour
+		}
+
+		certRenewalConfig := services.CertRenewalConfig{
+			CheckInterval: checkInterval,
+			RenewalDays:   cfg.CertRenewalDays,
+		}
+		certRenewalService = services.NewCertRenewalService(certManager, certRenewalConfig, logger)
+		certRenewalService.Start()
+		logger.Info("certificate renewal service started",
+			slog.Duration("check_interval", checkInterval),
+			slog.Int("renewal_days", cfg.CertRenewalDays))
+	}
+
+	// Initialize HTTP router with security configuration
+	router := api.NewRouter(&api.RouterConfig{
+		DB:             db,
+		FileStorage:    fileStorage,
+		Logger:         logger,
+		APIKey:         cfg.APIKey,
+		AllowedOrigins: allowedOrigins,
+		RateLimit:      int(cfg.RateLimitRequests),
+		RateBurst:      cfg.RateLimitBurst,
+		EnableAuth:     cfg.APIKey != "",
+		// SSL Domain Setup services
+		DomainManager:  domainManager,
+		DNSVerifier:    dnsVerifier,
+		DNSExporter:    dnsExporter,
+		CertManager:    certManager,
+	})
+
+	// Create secure WebSocket upgrader
+	upgrader := ws.NewSecureUpgrader(logger)
+
+	router.GET("/ws", func(c echo.Context) error {
+		conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+		if err != nil {
+			securityLogger.SuspiciousActivity(c.RealIP(), "/ws", "websocket_upgrade_failed")
+			logger.Error("websocket upgrade failed", slog.Any("error", err))
+			return err
+		}
+
+		client := ws.NewClient(wsHub, conn, logger)
+		wsHub.Register(client)
+
+		go client.WritePump()
+		go client.ReadPump()
+
+		return nil
+	})
+
 	smtpServer := smtp.NewSecureServer(smtpBackend, smtpConfig)
 
 	logger.Info("SMTP server configured",
@@ -220,6 +302,11 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	// Stop certificate renewal service
+	if certRenewalService != nil {
+		certRenewalService.Stop()
+	}
 
 	// Shutdown HTTP server
 	if err := router.Shutdown(ctx); err != nil {

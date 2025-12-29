@@ -1,0 +1,13 @@
+# Gitleaks Ignore File
+# Use this to suppress false positives for secret scanning
+# Format: commit-hash:file-path:rule-id
+# Documentation: https://github.com/gitleaks/gitleaks#gitleaksignore
+
+# Example test secrets (if you have intentional test credentials in code)
+# abc123def456:.env.example:generic-api-key
+
+# Instructions:
+# 1. Only add entries for verified false positives
+# 2. Never ignore real secrets - rotate them instead
+# 3. Use specific patterns rather than wildcards when possible
+# 4. Always add comments explaining why it's ignored

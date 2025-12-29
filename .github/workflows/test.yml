@@ -1,4 +1,4 @@
-name: Tests
+name: Quality Gate - Tests & Coverage
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
     branches: [main, develop]
 
 env:
-  GO_VERSION: '1.22'
+  GO_VERSION: '1.24'
+  COVERAGE_THRESHOLD: 70
 
 jobs:
   lint:
@@ -39,12 +40,23 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache: true
 
       - name: Download dependencies
         run: go mod download
 
-      - name: Run unit tests
-        run: go test -short -race -coverprofile=coverage-unit.out -covermode=atomic ./...
+      - name: Run unit tests with JSON output
+        run: |
+          go test -short -race -coverprofile=coverage-unit.out -covermode=atomic -json ./... > unit-tests.json
+          cat unit-tests.json | go run github.com/jstemmer/go-junit-report/v2@latest > unit-tests-report.xml
+
+      - name: Publish unit test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: unit-tests-report.xml
+          check_name: Unit Test Results
+          comment_mode: off
 
       - name: Upload unit test coverage
         uses: codecov/codecov-action@v4
@@ -52,7 +64,8 @@ jobs:
           files: coverage-unit.out
           flags: unit
           name: unit-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   integration-tests:
     name: Integration Tests
@@ -84,11 +97,21 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Run integration tests
+      - name: Run integration tests with JSON output
         env:
           DATABASE_URL: postgres://test:test@localhost:5432/infinimail_test?sslmode=disable
           TEST_DATABASE_URL: postgres://test:test@localhost:5432/infinimail_test?sslmode=disable
-        run: go test -tags=integration -race -coverprofile=coverage-integration.out -covermode=atomic ./tests/integration/...
+        run: |
+          go test -tags=integration -race -coverprofile=coverage-integration.out -covermode=atomic -json ./tests/integration/... > integration-tests.json
+          cat integration-tests.json | go run github.com/jstemmer/go-junit-report/v2@latest > integration-tests-report.xml
+
+      - name: Publish integration test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: integration-tests-report.xml
+          check_name: Integration Test Results
+          comment_mode: off
 
       - name: Upload integration test coverage
         uses: codecov/codecov-action@v4
@@ -96,7 +119,8 @@ jobs:
           files: coverage-integration.out
           flags: integration
           name: integration-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   e2e-tests:
     name: E2E Tests
@@ -128,10 +152,20 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Run E2E tests
+      - name: Run E2E tests with JSON output
         env:
           DATABASE_URL: postgres://test:test@localhost:5432/infinimail_e2e_test?sslmode=disable
-        run: go test -tags=e2e -race -coverprofile=coverage-e2e.out -covermode=atomic ./tests/e2e/...
+        run: |
+          go test -tags=e2e -race -coverprofile=coverage-e2e.out -covermode=atomic -json ./tests/e2e/... > e2e-tests.json
+          cat e2e-tests.json | go run github.com/jstemmer/go-junit-report/v2@latest > e2e-tests-report.xml
+
+      - name: Publish E2E test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: e2e-tests-report.xml
+          check_name: E2E Test Results
+          comment_mode: off
 
       - name: Upload E2E test coverage
         uses: codecov/codecov-action@v4
@@ -139,10 +173,11 @@ jobs:
           files: coverage-e2e.out
           flags: e2e
           name: e2e-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   coverage-report:
-    name: Coverage Report
+    name: Coverage Report & Quality Gate
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests]
     steps:
@@ -153,6 +188,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache: true
 
       - name: Download dependencies
         run: go mod download
@@ -160,7 +196,19 @@ jobs:
       - name: Generate full coverage report
         run: |
           go test -short -coverprofile=coverage.out -covermode=atomic ./...
-          go tool cover -func=coverage.out
+          go tool cover -func=coverage.out -o coverage.txt
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage: ${COVERAGE}%"
+
+          if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
+            echo "ERROR: Coverage ${COVERAGE}% is below threshold ${{ env.COVERAGE_THRESHOLD }}%"
+            exit 1
+          fi
+
+          echo "SUCCESS: Coverage ${COVERAGE}% meets threshold ${{ env.COVERAGE_THRESHOLD }}%"
 
       - name: Upload combined coverage
         uses: codecov/codecov-action@v4
@@ -168,4 +216,31 @@ jobs:
           files: coverage.out
           flags: combined
           name: combined-coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Generate coverage summary
+        run: |
+          echo "# Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=coverage.out >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  quality-gate:
+    name: Quality Gate Status
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, integration-tests, e2e-tests, coverage-report]
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.integration-tests.result }}" != "success" ] || \
+             [ "${{ needs.e2e-tests.result }}" != "success" ] || \
+             [ "${{ needs.coverage-report.result }}" != "success" ]; then
+            echo "Quality gate FAILED - one or more checks did not pass"
+            exit 1
+          fi
+          echo "Quality gate PASSED - all checks successful"

@@ -243,6 +243,20 @@ func (c *Config) ValidateProduction() error {
 		return fmt.Errorf("sslmode=disable is not allowed in production")
 	}
 
+	// ACME configuration validation for production
+	if c.ACMEStaging {
+		return fmt.Errorf("ACME_STAGING must be false in production for real certificates")
+	}
+
+	if c.ACMEEmail == "" {
+		return fmt.Errorf("ACME_EMAIL is required in production for certificate expiry notifications")
+	}
+
+	// Validate ACME directory URL is production
+	if strings.Contains(c.ACMEDirectoryURL, "staging") {
+		return fmt.Errorf("ACME_DIRECTORY_URL should use production endpoint in production environment")
+	}
+
 	return nil
 }
 
