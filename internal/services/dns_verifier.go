@@ -119,6 +119,26 @@ func NewDNSVerifierServiceWithResolver(repo repository.DomainRepository, config 
 }
 
 
+// getParentDomain extracts the parent domain from a domain name
+// e.g., "mail.example.com" -> "example.com", "example.com" -> "example.com"
+func getParentDomain(domainName string) string {
+	// If domain starts with "mail.", extract the parent domain
+	if strings.HasPrefix(strings.ToLower(domainName), "mail.") {
+		return domainName[5:] // Remove "mail." prefix
+	}
+	return domainName
+}
+
+// getMailHostname returns the mail hostname for a domain
+// e.g., "example.com" -> "mail.example.com", "mail.example.com" -> "mail.example.com"
+func getMailHostname(domainName string) string {
+	// If domain already starts with "mail.", return as-is
+	if strings.HasPrefix(strings.ToLower(domainName), "mail.") {
+		return domainName
+	}
+	return fmt.Sprintf("mail.%s", domainName)
+}
+
 // VerifyDNS checks all required DNS records for a domain with retry mechanism
 func (s *dnsVerifierService) VerifyDNS(ctx context.Context, domain *models.Domain) (*DNSVerificationResult, error) {
 	if domain == nil {
@@ -129,9 +149,18 @@ func (s *dnsVerifierService) VerifyDNS(ctx context.Context, domain *models.Domai
 		Errors: make([]string, 0),
 	}
 
-	// Verify MX record
+	// Extract parent domain for MX and TXT lookups
+	// e.g., if domain.Name is "mail.example.com", parentDomain is "example.com"
+	parentDomain := getParentDomain(domain.Name)
+	
+	// Get mail hostname for A record lookup
+	// e.g., if domain.Name is "example.com", mailHostname is "mail.example.com"
+	// e.g., if domain.Name is "mail.example.com", mailHostname is "mail.example.com"
+	mailHostname := getMailHostname(domain.Name)
+
+	// Verify MX record (lookup on parent domain)
 	mxVerified, err := s.verifyWithRetry(ctx, func(ctx context.Context) (bool, error) {
-		return s.VerifyMXRecord(ctx, domain.Name, s.config.SMTPHostname)
+		return s.VerifyMXRecord(ctx, parentDomain, s.config.SMTPHostname)
 	})
 	if err != nil {
 		result.Errors = append(result.Errors, fmt.Sprintf("MX verification failed: %v", err))
@@ -139,7 +168,6 @@ func (s *dnsVerifierService) VerifyDNS(ctx context.Context, domain *models.Domai
 	result.MXVerified = mxVerified
 
 	// Verify A record for mail subdomain
-	mailHostname := fmt.Sprintf("mail.%s", domain.Name)
 	aVerified, err := s.verifyWithRetry(ctx, func(ctx context.Context) (bool, error) {
 		return s.VerifyARecord(ctx, mailHostname, s.config.ServerIP)
 	})
@@ -148,9 +176,9 @@ func (s *dnsVerifierService) VerifyDNS(ctx context.Context, domain *models.Domai
 	}
 	result.AVerified = aVerified
 
-	// Verify TXT record for challenge
+	// Verify TXT record for challenge (lookup on parent domain)
 	txtVerified, err := s.verifyWithRetry(ctx, func(ctx context.Context) (bool, error) {
-		return s.VerifyTXTRecord(ctx, domain.Name, domain.DNSChallenge)
+		return s.VerifyTXTRecord(ctx, parentDomain, domain.DNSChallenge)
 	})
 	if err != nil {
 		result.Errors = append(result.Errors, fmt.Sprintf("TXT verification failed: %v", err))

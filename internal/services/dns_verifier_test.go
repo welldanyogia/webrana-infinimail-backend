@@ -606,3 +606,175 @@ func TestDefaultDNSVerifierConfig(t *testing.T) {
 	assert.Equal(t, 5*time.Second, config.RetryDelay)
 	assert.Equal(t, 10*time.Second, config.LookupTimeout)
 }
+
+
+// Test helper functions for parent domain extraction
+func TestGetParentDomain(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "domain without mail prefix",
+			input:    "example.com",
+			expected: "example.com",
+		},
+		{
+			name:     "domain with mail prefix",
+			input:    "mail.example.com",
+			expected: "example.com",
+		},
+		{
+			name:     "domain with MAIL prefix (uppercase)",
+			input:    "MAIL.example.com",
+			expected: "example.com",
+		},
+		{
+			name:     "domain with Mail prefix (mixed case)",
+			input:    "Mail.example.com",
+			expected: "example.com",
+		},
+		{
+			name:     "subdomain without mail prefix",
+			input:    "sub.example.com",
+			expected: "sub.example.com",
+		},
+		{
+			name:     "deep subdomain with mail prefix",
+			input:    "mail.sub.example.com",
+			expected: "sub.example.com",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getParentDomain(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetMailHostname(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "domain without mail prefix",
+			input:    "example.com",
+			expected: "mail.example.com",
+		},
+		{
+			name:     "domain already has mail prefix",
+			input:    "mail.example.com",
+			expected: "mail.example.com",
+		},
+		{
+			name:     "domain with MAIL prefix (uppercase)",
+			input:    "MAIL.example.com",
+			expected: "MAIL.example.com",
+		},
+		{
+			name:     "subdomain without mail prefix",
+			input:    "sub.example.com",
+			expected: "mail.sub.example.com",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getMailHostname(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+// Test VerifyDNS with domain that has mail. prefix (the bug scenario)
+func TestVerifyDNS_DomainWithMailPrefix(t *testing.T) {
+	mockResolver := new(MockDNSResolver)
+	mockRepo := new(MockDomainRepository)
+
+	config := DNSVerifierConfig{
+		SMTPHostname:  "mail.infinimail.webrana.id",
+		ServerIP:      "103.127.136.43",
+		MaxRetries:    0,
+		RetryDelay:    time.Millisecond,
+		LookupTimeout: time.Second,
+	}
+
+	service := NewDNSVerifierServiceWithResolver(mockRepo, config, mockResolver)
+
+	// Domain stored with mail. prefix (the bug scenario)
+	domain := &models.Domain{
+		ID:           1,
+		Name:         "mail.agungbesisentosa.com", // This is how it was stored
+		DNSChallenge: "abc123xyz",
+	}
+
+	// The fix should:
+	// - MX lookup on "agungbesisentosa.com" (parent domain)
+	// - A record lookup on "mail.agungbesisentosa.com" (no double prefix)
+	// - TXT lookup on "_infinimail.agungbesisentosa.com" (parent domain)
+	mockResolver.On("LookupMX", mock.Anything, "agungbesisentosa.com").Return([]*net.MX{
+		{Host: "mail.infinimail.webrana.id.", Pref: 10},
+	}, nil)
+	mockResolver.On("LookupHost", mock.Anything, "mail.agungbesisentosa.com").Return([]string{"103.127.136.43"}, nil)
+	mockResolver.On("LookupTXT", mock.Anything, "_infinimail.agungbesisentosa.com").Return([]string{"infinimail-verify=abc123xyz"}, nil)
+
+	result, err := service.VerifyDNS(context.Background(), domain)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.True(t, result.MXVerified, "MX should be verified on parent domain")
+	assert.True(t, result.AVerified, "A record should be verified without double mail. prefix")
+	assert.True(t, result.TXTVerified, "TXT should be verified on parent domain")
+	assert.True(t, result.AllVerified)
+	assert.Empty(t, result.Errors)
+	mockResolver.AssertExpectations(t)
+}
+
+// Test VerifyDNS with normal domain (no mail. prefix)
+func TestVerifyDNS_DomainWithoutMailPrefix(t *testing.T) {
+	mockResolver := new(MockDNSResolver)
+	mockRepo := new(MockDomainRepository)
+
+	config := DNSVerifierConfig{
+		SMTPHostname:  "mail.infinimail.webrana.id",
+		ServerIP:      "103.127.136.43",
+		MaxRetries:    0,
+		RetryDelay:    time.Millisecond,
+		LookupTimeout: time.Second,
+	}
+
+	service := NewDNSVerifierServiceWithResolver(mockRepo, config, mockResolver)
+
+	// Domain stored without mail. prefix (normal case)
+	domain := &models.Domain{
+		ID:           1,
+		Name:         "agungbesisentosa.com",
+		DNSChallenge: "abc123xyz",
+	}
+
+	// Should work as before:
+	// - MX lookup on "agungbesisentosa.com"
+	// - A record lookup on "mail.agungbesisentosa.com"
+	// - TXT lookup on "_infinimail.agungbesisentosa.com"
+	mockResolver.On("LookupMX", mock.Anything, "agungbesisentosa.com").Return([]*net.MX{
+		{Host: "mail.infinimail.webrana.id.", Pref: 10},
+	}, nil)
+	mockResolver.On("LookupHost", mock.Anything, "mail.agungbesisentosa.com").Return([]string{"103.127.136.43"}, nil)
+	mockResolver.On("LookupTXT", mock.Anything, "_infinimail.agungbesisentosa.com").Return([]string{"infinimail-verify=abc123xyz"}, nil)
+
+	result, err := service.VerifyDNS(context.Background(), domain)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.True(t, result.MXVerified)
+	assert.True(t, result.AVerified)
+	assert.True(t, result.TXTVerified)
+	assert.True(t, result.AllVerified)
+	assert.Empty(t, result.Errors)
+	mockResolver.AssertExpectations(t)
+}

@@ -138,32 +138,60 @@ func (s *domainManagerService) GetDNSGuide(ctx context.Context, domainID uint) (
 		return nil, fmt.Errorf("failed to get domain: %w", err)
 	}
 
+	// Extract parent domain for MX and TXT records
+	// e.g., if domain.Name is "mail.example.com", parentDomain is "example.com"
+	parentDomain := getParentDomainName(domain.Name)
+	
+	// Get mail hostname for A record
+	// e.g., if domain.Name is "example.com", mailHostname is "mail.example.com"
+	mailHostname := getMailHostnameName(domain.Name)
+
 	// Generate DNS guide based on configuration
 	guide := &DNSGuide{
 		SMTPHost: s.config.SMTPHostname,
 		ServerIP: s.config.ServerIP,
 		MXRecord: DNSRecord{
 			Type:     "MX",
-			Name:     domain.Name,
+			Name:     parentDomain,
 			Value:    s.config.SMTPHostname,
 			Priority: 10,
 			TTL:      3600,
 		},
 		ARecord: DNSRecord{
 			Type:  "A",
-			Name:  fmt.Sprintf("mail.%s", domain.Name),
+			Name:  mailHostname,
 			Value: s.config.ServerIP,
 			TTL:   3600,
 		},
 		TXTRecord: DNSRecord{
 			Type:  "TXT",
-			Name:  fmt.Sprintf("_infinimail.%s", domain.Name),
+			Name:  fmt.Sprintf("_infinimail.%s", parentDomain),
 			Value: fmt.Sprintf("infinimail-verify=%s", domain.DNSChallenge),
 			TTL:   3600,
 		},
 	}
 
 	return guide, nil
+}
+
+// getParentDomainName extracts the parent domain from a domain name
+// e.g., "mail.example.com" -> "example.com", "example.com" -> "example.com"
+func getParentDomainName(domainName string) string {
+	// If domain starts with "mail.", extract the parent domain
+	if strings.HasPrefix(strings.ToLower(domainName), "mail.") {
+		return domainName[5:] // Remove "mail." prefix
+	}
+	return domainName
+}
+
+// getMailHostnameName returns the mail hostname for a domain
+// e.g., "example.com" -> "mail.example.com", "mail.example.com" -> "mail.example.com"
+func getMailHostnameName(domainName string) string {
+	// If domain already starts with "mail.", return as-is
+	if strings.HasPrefix(strings.ToLower(domainName), "mail.") {
+		return domainName
+	}
+	return fmt.Sprintf("mail.%s", domainName)
 }
 
 // ActivateDomain sets the domain to active status
