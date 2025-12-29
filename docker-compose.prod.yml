@@ -54,6 +54,10 @@ services:
       SMTP_ALLOW_INSECURE: "false"
       SMTP_MAX_MESSAGE_SIZE: 26214400
       SMTP_MAX_RECIPIENTS: 100
+      
+      # Domain Manager / DNS Guide Configuration
+      SMTP_HOSTNAME: ${SMTP_HOSTNAME:-mail.infinimail.webrana.id}
+      SERVER_IP: ${SERVER_IP:-}
 
       # SMTP TLS (STARTTLS)
       SMTP_TLS_CERT: /etc/ssl/smtp/fullchain.pem
