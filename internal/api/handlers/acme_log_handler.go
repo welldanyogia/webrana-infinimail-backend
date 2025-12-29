@@ -306,7 +306,7 @@ func generateDomainLogHTML(log *services.ACMEDomainLog) string {
                 <span class="level ` + levelClass + `">` + string(entry.Level) + `</span>
                 <span class="timestamp">` + entry.Timestamp.Format("15:04:05.000") + `</span>
             </div>
-            <div class="step">` + template.HTMLEscapeString(entry.Step) + `</div>
+            <div class="step">` + template.HTMLEscapeString(string(entry.Step)) + `</div>
             <div class="message">` + template.HTMLEscapeString(entry.Message) + `</div>`
 
 		if entry.Details != nil {
