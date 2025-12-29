@@ -34,6 +34,18 @@ type Config struct {
 	// Rate Limiting
 	RateLimitRequests float64
 	RateLimitBurst    int
+
+	// Domain Manager / DNS Guide Configuration
+	SMTPHostname string
+	ServerIP     string
+
+	// ACME / Certificate Configuration
+	ACMEDirectoryURL          string
+	ACMEEmail                 string
+	ACMEStaging               bool
+	CertStoragePath           string
+	CertRenewalDays           int
+	CertRenewalCheckInterval  string
 }
 
 // Load reads configuration from environment variables
@@ -119,6 +131,57 @@ func Load() (*Config, error) {
 		cfg.RateLimitBurst = 20
 	}
 
+	// Domain Manager / DNS Guide Configuration
+	cfg.SMTPHostname = os.Getenv("SMTP_HOSTNAME")
+	if cfg.SMTPHostname == "" {
+		cfg.SMTPHostname = "mail.infinimail.local"
+	}
+
+	cfg.ServerIP = os.Getenv("SERVER_IP")
+	if cfg.ServerIP == "" {
+		cfg.ServerIP = "127.0.0.1"
+	}
+
+	// ACME / Certificate Configuration
+	cfg.ACMEDirectoryURL = os.Getenv("ACME_DIRECTORY_URL")
+	if cfg.ACMEDirectoryURL == "" {
+		cfg.ACMEDirectoryURL = "https://acme-staging-v02.api.letsencrypt.org/directory"
+	}
+
+	cfg.ACMEEmail = os.Getenv("ACME_EMAIL")
+
+	acmeStaging := os.Getenv("ACME_STAGING")
+	if acmeStaging == "" {
+		cfg.ACMEStaging = true
+	} else {
+		staging, err := strconv.ParseBool(acmeStaging)
+		if err != nil {
+			return nil, fmt.Errorf("ACME_STAGING must be a valid boolean: %w", err)
+		}
+		cfg.ACMEStaging = staging
+	}
+
+	cfg.CertStoragePath = os.Getenv("CERT_STORAGE_PATH")
+	if cfg.CertStoragePath == "" {
+		cfg.CertStoragePath = "./certs"
+	}
+
+	certRenewalDays := os.Getenv("CERT_RENEWAL_DAYS")
+	if certRenewalDays == "" {
+		cfg.CertRenewalDays = 30
+	} else {
+		days, err := strconv.Atoi(certRenewalDays)
+		if err != nil {
+			return nil, fmt.Errorf("CERT_RENEWAL_DAYS must be a valid integer: %w", err)
+		}
+		cfg.CertRenewalDays = days
+	}
+
+	cfg.CertRenewalCheckInterval = os.Getenv("CERT_RENEWAL_CHECK_INTERVAL")
+	if cfg.CertRenewalCheckInterval == "" {
+		cfg.CertRenewalCheckInterval = "24h"
+	}
+
 	return cfg, nil
 }
 
@@ -196,5 +259,13 @@ func (c *Config) LogConfig(logger *slog.Logger) {
 		slog.Bool("allowed_origins_set", c.AllowedOrigins != ""),
 		slog.Float64("rate_limit_rps", c.RateLimitRequests),
 		slog.Int("rate_limit_burst", c.RateLimitBurst),
+		slog.String("smtp_hostname", c.SMTPHostname),
+		slog.String("server_ip", c.ServerIP),
+		slog.String("acme_directory_url", c.ACMEDirectoryURL),
+		slog.Bool("acme_email_set", c.ACMEEmail != ""),
+		slog.Bool("acme_staging", c.ACMEStaging),
+		slog.String("cert_storage_path", c.CertStoragePath),
+		slog.Int("cert_renewal_days", c.CertRenewalDays),
+		slog.String("cert_renewal_check_interval", c.CertRenewalCheckInterval),
 	)
 }

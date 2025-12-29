@@ -79,7 +79,7 @@ func (s *SMTPIntegrationTestSuite) SetupSuite() {
 	s.db = db
 
 	// Run migrations
-	err = db.AutoMigrate(&models.Domain{}, &models.Mailbox{}, &models.Message{}, &models.Attachment{})
+	err = db.AutoMigrate(&models.Domain{}, &models.DomainCertificate{}, &models.Mailbox{}, &models.Message{}, &models.Attachment{})
 	require.NoError(s.T(), err)
 
 	// Initialize repositories

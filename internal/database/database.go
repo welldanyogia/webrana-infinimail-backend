@@ -111,6 +111,7 @@ func Migrate(db *gorm.DB) error {
 
 	err := db.AutoMigrate(
 		&models.Domain{},
+		&models.DomainCertificate{},
 		&models.Mailbox{},
 		&models.Message{},
 		&models.Attachment{},
