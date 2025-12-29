@@ -234,6 +234,8 @@ func (c *acmeClient) GetDNSChallenge(ctx context.Context, domain string) (*DNSCh
 
 // CompleteDNSChallenge completes the DNS-01 challenge after TXT record is set
 func (c *acmeClient) CompleteDNSChallenge(ctx context.Context, domain string) error {
+	logger := GetACMELogger()
+
 	// Get stored challenge
 	challenge, ok := c.activeChallenges[domain]
 	if !ok {
@@ -253,22 +255,32 @@ func (c *acmeClient) CompleteDNSChallenge(ctx context.Context, domain string) er
 	}
 
 	log.Printf("[ACME] Starting DNS-01 challenge for domain: %s", domain)
-	log.Printf("[ACME] Expected TXT record: _acme-challenge.%s = %s", domain, expectedTXT)
+	logger.LogInfo(domain, "challenge_start", "Starting DNS-01 challenge")
+	logger.LogDebug(domain, "txt_record", fmt.Sprintf("Expected TXT record: _acme-challenge.%s = %s", domain, expectedTXT), map[string]string{
+		"record_name":  "_acme-challenge." + domain,
+		"record_value": expectedTXT,
+	})
 
 	// Pre-check: Verify TXT record exists before accepting challenge
 	// This helps catch DNS propagation issues early
 	txtFound, txtValues := c.verifyDNSTXTRecord(domain, expectedTXT)
 	if !txtFound {
 		log.Printf("[ACME] WARNING: TXT record not found or doesn't match. Found values: %v", txtValues)
+		logger.LogWarning(domain, "dns_precheck", "TXT record not found or doesn't match", map[string]interface{}{
+			"expected":     expectedTXT,
+			"found_values": txtValues,
+		})
 		log.Printf("[ACME] Waiting for DNS propagation...")
 	} else {
 		log.Printf("[ACME] TXT record verified successfully")
+		logger.LogInfo(domain, "dns_precheck", "TXT record verified successfully before propagation delay")
 	}
 
 	// Wait for DNS propagation before accepting challenge
 	// Let's Encrypt validates from multiple vantage points globally
 	propagationDelay := 90 * time.Second // 90 seconds for DNS propagation
 	log.Printf("[ACME] Waiting %v for DNS propagation...", propagationDelay)
+	logger.LogInfo(domain, "dns_propagation", fmt.Sprintf("Waiting %v for DNS propagation", propagationDelay))
 
 	select {
 	case <-ctx.Done():
@@ -280,17 +292,23 @@ func (c *acmeClient) CompleteDNSChallenge(ctx context.Context, domain string) er
 	// Re-verify TXT record after waiting
 	txtFound, txtValues = c.verifyDNSTXTRecord(domain, expectedTXT)
 	if !txtFound {
-		return fmt.Errorf("DNS TXT record verification failed after waiting. Expected _acme-challenge.%s with value %s, but found: %v. Please ensure the TXT record is properly configured and has propagated", domain, expectedTXT, txtValues)
+		errMsg := fmt.Sprintf("DNS TXT record verification failed after waiting. Expected _acme-challenge.%s with value %s, but found: %v", domain, expectedTXT, txtValues)
+		logger.LogError(domain, "dns_verify_failed", errMsg, fmt.Errorf("TXT record not found"))
+		return fmt.Errorf("%s. Please ensure the TXT record is properly configured and has propagated", errMsg)
 	}
 	log.Printf("[ACME] TXT record verified after propagation delay")
+	logger.LogInfo(domain, "dns_verified", "TXT record verified after propagation delay")
 
 	// Accept the challenge - this tells Let's Encrypt to start validation
 	log.Printf("[ACME] Accepting challenge...")
+	logger.LogInfo(domain, "challenge_accept", "Accepting challenge with Let's Encrypt")
 	_, err = c.client.Accept(ctx, challenge)
 	if err != nil {
+		logger.LogError(domain, "challenge_accept_failed", "Failed to accept challenge", err)
 		return fmt.Errorf("failed to accept challenge: %w", err)
 	}
 	log.Printf("[ACME] Challenge accepted, waiting for Let's Encrypt validation...")
+	logger.LogInfo(domain, "challenge_accepted", "Challenge accepted, waiting for Let's Encrypt validation")
 
 	// Poll authorization status to get detailed error information
 	// This is more informative than just waiting for order
@@ -305,27 +323,36 @@ func (c *acmeClient) CompleteDNSChallenge(ctx context.Context, domain string) er
 		authz, err := c.client.GetAuthorization(authzCtx, authzURL)
 		if err != nil {
 			log.Printf("[ACME] Error getting authorization status: %v", err)
+			logger.LogError(domain, "authz_poll_error", "Error getting authorization status", err)
 			return fmt.Errorf("failed to get authorization status: %w", err)
 		}
 
 		log.Printf("[ACME] Authorization status: %s (attempt %d/%d)", authz.Status, attempt+1, maxAttempts)
+		logger.LogDebug(domain, "authz_poll", fmt.Sprintf("Authorization status: %s (attempt %d/%d)", authz.Status, attempt+1, maxAttempts), map[string]interface{}{
+			"status":  authz.Status,
+			"attempt": attempt + 1,
+		})
 
 		switch authz.Status {
 		case acme.StatusValid:
 			log.Printf("[ACME] Authorization validated successfully!")
+			logger.LogInfo(domain, "authz_valid", "Authorization validated successfully by Let's Encrypt")
 			// Authorization is valid, now wait for order to be ready
 			orderCtx, orderCancel := context.WithTimeout(ctx, 2*time.Minute)
 			defer orderCancel()
 			_, err = c.client.WaitOrder(orderCtx, order.URI)
 			if err != nil {
+				logger.LogError(domain, "order_wait_failed", "Failed waiting for order after authorization", err)
 				return fmt.Errorf("failed waiting for order after authorization: %w", err)
 			}
+			logger.LogInfo(domain, "order_ready", "Order is ready for certificate finalization")
 			return nil
 
 		case acme.StatusInvalid:
 			// Get detailed error from challenge
 			errDetails := c.getAuthorizationErrorDetails(authz)
 			log.Printf("[ACME] Authorization INVALID: %s", errDetails)
+			logger.LogError(domain, "authz_invalid", "Authorization failed", fmt.Errorf(errDetails))
 			return fmt.Errorf("ACME authorization failed: %s", errDetails)
 
 		case acme.StatusPending, acme.StatusProcessing:
@@ -333,20 +360,26 @@ func (c *acmeClient) CompleteDNSChallenge(ctx context.Context, domain string) er
 			log.Printf("[ACME] Authorization still processing, waiting %v...", pollInterval)
 			select {
 			case <-authzCtx.Done():
+				logger.LogError(domain, "authz_timeout", "Timeout waiting for authorization", authzCtx.Err())
 				return fmt.Errorf("timeout waiting for authorization: %w", authzCtx.Err())
 			case <-time.After(pollInterval):
 				continue
 			}
 
 		case acme.StatusDeactivated, acme.StatusExpired, acme.StatusRevoked:
-			return fmt.Errorf("authorization is %s, cannot proceed", authz.Status)
+			errMsg := fmt.Sprintf("authorization is %s, cannot proceed", authz.Status)
+			logger.LogError(domain, "authz_invalid_status", errMsg, fmt.Errorf(errMsg))
+			return fmt.Errorf(errMsg)
 
 		default:
 			log.Printf("[ACME] Unknown authorization status: %s", authz.Status)
+			logger.LogWarning(domain, "authz_unknown_status", fmt.Sprintf("Unknown authorization status: %s", authz.Status), nil)
 		}
 	}
 
-	return fmt.Errorf("timeout: authorization did not complete within %d attempts", maxAttempts)
+	errMsg := fmt.Sprintf("timeout: authorization did not complete within %d attempts", maxAttempts)
+	logger.LogError(domain, "authz_max_attempts", errMsg, fmt.Errorf(errMsg))
+	return fmt.Errorf(errMsg)
 }
 
 // verifyDNSTXTRecord checks if the expected TXT record exists

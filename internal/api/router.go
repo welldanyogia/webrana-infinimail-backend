@@ -142,5 +142,15 @@ func NewRouter(cfg *RouterConfig) *echo.Echo {
 	attachments.GET("/:id", attachmentHandler.Get)
 	attachments.GET("/:id/download", attachmentHandler.Download)
 
+	// ACME Log routes (for debugging certificate generation)
+	acmeLogHandler := handlers.NewACMELogHandler()
+	// JSON API endpoints
+	acmeLogs := api.Group("/acme/logs")
+	acmeLogs.GET("", acmeLogHandler.ListLogs)
+	acmeLogs.GET("/:domain", acmeLogHandler.GetDomainLog)
+	// Browser-friendly HTML endpoints (no auth required for easy access)
+	e.GET("/acme/logs", acmeLogHandler.ViewLogsHTML)
+	e.GET("/acme/logs/:domain", acmeLogHandler.ViewDomainLogHTML)
+
 	return e
 }

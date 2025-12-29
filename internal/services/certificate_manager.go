@@ -103,15 +103,23 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 		return nil, fmt.Errorf("domain cannot be nil")
 	}
 
+	// Get ACME logger
+	acmeLogger := GetACMELogger()
+	acmeLogger.StartDomainLog(domain.Name)
+
 	// Verify domain is in dns_verified status
 	if domain.Status != models.StatusDNSVerified {
-		return nil, fmt.Errorf("domain must be in dns_verified status to generate certificate, current status: %s", domain.Status)
+		err := fmt.Errorf("domain must be in dns_verified status to generate certificate, current status: %s", domain.Status)
+		acmeLogger.MarkFailed(domain.Name, err)
+		return nil, err
 	}
 
 	log.Printf("[CertManager] Starting certificate generation for domain: %s", domain.Name)
+	acmeLogger.LogInfo(domain.Name, "init", "Starting certificate generation process")
 
 	// Update domain status to pending_certificate
 	if err := s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusPendingCertificate, ""); err != nil {
+		acmeLogger.MarkFailed(domain.Name, err)
 		return nil, fmt.Errorf("failed to update domain status to pending_certificate: %w", err)
 	}
 
@@ -121,63 +129,82 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 		fmt.Sprintf("mail.%s", domain.Name),
 	}
 	log.Printf("[CertManager] Requesting certificate for domains: %v", domains)
+	acmeLogger.LogInfo(domain.Name, "domains", fmt.Sprintf("Requesting certificate for domains: %v", domains))
 
 	// Get DNS challenge for the primary domain
 	log.Printf("[CertManager] Getting DNS challenge from ACME server...")
+	acmeLogger.LogInfo(domain.Name, "get_challenge", "Requesting DNS challenge from ACME server")
 	challengeInfo, err := s.acmeClient.GetDNSChallenge(ctx, domain.Name)
 	if err != nil {
 		// Update status to failed
 		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, fmt.Sprintf("ACME challenge failed: %v", err))
+		acmeLogger.MarkFailed(domain.Name, err)
 		return nil, fmt.Errorf("failed to get DNS challenge: %w", err)
 	}
 
 	log.Printf("[CertManager] DNS challenge received. TXT record required: _acme-challenge.%s = %s", domain.Name, challengeInfo.TXTRecord)
+	acmeLogger.LogInfo(domain.Name, "challenge_received", "DNS challenge received from ACME server")
+	acmeLogger.LogDebug(domain.Name, "challenge_details", "TXT record details", map[string]string{
+		"record_name":  "_acme-challenge." + domain.Name,
+		"record_value": challengeInfo.TXTRecord,
+		"token":        challengeInfo.Token,
+	})
 
 	// Store the ACME challenge info in domain error message temporarily
 	// This allows the user to see what TXT record they need to add
 	acmeChallengeMsg := fmt.Sprintf("ACME_CHALLENGE:_acme-challenge.%s=%s", domain.Name, challengeInfo.TXTRecord)
 	if err := s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusPendingCertificate, acmeChallengeMsg); err != nil {
+		acmeLogger.MarkFailed(domain.Name, err)
 		return nil, fmt.Errorf("failed to store ACME challenge info: %w", err)
 	}
 
 	// Complete DNS challenge (Let's Encrypt will verify the _acme-challenge TXT record)
 	log.Printf("[CertManager] Completing DNS challenge (this may take a few minutes)...")
+	acmeLogger.LogInfo(domain.Name, "complete_challenge", "Starting DNS challenge completion (this may take a few minutes)")
 	if err := s.acmeClient.CompleteDNSChallenge(ctx, domain.Name); err != nil {
 		// Update status to failed with helpful message
 		errMsg := fmt.Sprintf("ACME DNS challenge failed: %v. Please ensure TXT record exists: Name=_acme-challenge.%s Value=%s", err, domain.Name, challengeInfo.TXTRecord)
 		log.Printf("[CertManager] ERROR: %s", errMsg)
 		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, errMsg)
+		acmeLogger.MarkFailed(domain.Name, err)
 		return nil, fmt.Errorf("failed to complete DNS challenge: %w", err)
 	}
 
 	log.Printf("[CertManager] DNS challenge completed successfully!")
+	acmeLogger.LogInfo(domain.Name, "challenge_complete", "DNS challenge completed successfully")
 
 	// Request certificate from ACME
 	log.Printf("[CertManager] Requesting certificate from ACME server...")
+	acmeLogger.LogInfo(domain.Name, "request_cert", "Requesting certificate from ACME server")
 	bundle, err := s.acmeClient.RequestCertificate(ctx, domains)
 	if err != nil {
 		// Update status to failed
 		errMsg := fmt.Sprintf("Certificate request failed: %v", err)
 		log.Printf("[CertManager] ERROR: %s", errMsg)
 		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, errMsg)
+		acmeLogger.MarkFailed(domain.Name, err)
 		return nil, fmt.Errorf("failed to request certificate: %w", err)
 	}
 
 	log.Printf("[CertManager] Certificate received! Expires at: %v", bundle.ExpiresAt)
+	acmeLogger.LogInfo(domain.Name, "cert_received", fmt.Sprintf("Certificate received! Expires at: %v", bundle.ExpiresAt))
 
 	// Save certificate to disk
 	storedCert, err := s.certStorage.SaveCertificate(domain.Name, bundle)
 	if err != nil {
 		// Update status to failed
 		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, fmt.Sprintf("Certificate storage failed: %v", err))
+		acmeLogger.MarkFailed(domain.Name, err)
 		return nil, fmt.Errorf("failed to save certificate: %w", err)
 	}
 
 	log.Printf("[CertManager] Certificate saved to disk: %s", storedCert.CertPath)
+	acmeLogger.LogInfo(domain.Name, "cert_saved", fmt.Sprintf("Certificate saved to disk: %s", storedCert.CertPath))
 
 	// Check if certificate already exists in database
 	existingCert, err := s.certRepo.GetByDomainID(ctx, domain.ID)
 	if err != nil && !errors.Is(err, repository.ErrNotFound) {
+		acmeLogger.MarkFailed(domain.Name, err)
 		return nil, fmt.Errorf("failed to check existing certificate: %w", err)
 	}
 
@@ -190,9 +217,11 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 		existingCert.ExpiresAt = storedCert.ExpiresAt
 		existingCert.IssuedAt = storedCert.IssuedAt
 		if err := s.certRepo.Update(ctx, existingCert); err != nil {
+			acmeLogger.MarkFailed(domain.Name, err)
 			return nil, fmt.Errorf("failed to update certificate record: %w", err)
 		}
 		dbCert = existingCert
+		acmeLogger.LogInfo(domain.Name, "db_updated", "Certificate record updated in database")
 	} else {
 		// Create new certificate record
 		dbCert = &models.DomainCertificate{
@@ -205,12 +234,15 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 			AutoRenew:  true,
 		}
 		if err := s.certRepo.Create(ctx, dbCert); err != nil {
+			acmeLogger.MarkFailed(domain.Name, err)
 			return nil, fmt.Errorf("failed to create certificate record: %w", err)
 		}
+		acmeLogger.LogInfo(domain.Name, "db_created", "Certificate record created in database")
 	}
 
 	// Update domain status to certificate_issued
 	if err := s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusCertificateIssued, ""); err != nil {
+		acmeLogger.MarkFailed(domain.Name, err)
 		return nil, fmt.Errorf("failed to update domain status to certificate_issued: %w", err)
 	}
 
@@ -218,6 +250,7 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 	s.triggerHotReload(domain.Name)
 
 	log.Printf("[CertManager] Certificate generation completed successfully for domain: %s", domain.Name)
+	acmeLogger.MarkSuccess(domain.Name)
 
 	return modelToCertificate(dbCert), nil
 }
