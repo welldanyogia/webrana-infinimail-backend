@@ -17,6 +17,7 @@ import (
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/database"
 	seclogger "github.com/welldanyogia/webrana-infinimail-backend/internal/logger"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+	"github.com/welldanyogia/webrana-infinimail-backend/internal/services"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/smtp"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/storage"
 	ws "github.com/welldanyogia/webrana-infinimail-backend/internal/websocket"
@@ -142,12 +143,46 @@ func main() {
 	// Load SMTP security configuration from environment
 	smtpConfig := smtp.LoadServerConfigFromEnv()
 	smtpConfig.Addr = fmt.Sprintf(":%d", cfg.SMTPPort)
+
+	// Initialize certificate store for SNI support
+	var certStore services.CertificateStore
+	certRepo := repository.NewCertificateRepository(db)
+	
+	// Create certificate storage
+	certStorage, err := services.NewCertStorage(services.CertStorageConfig{
+		BasePath: cfg.CertStoragePath,
+	})
+	if err != nil {
+		logger.Warn("failed to initialize certificate storage, SNI disabled", slog.Any("error", err))
+	} else {
+		// Create certificate store
+		certStore, err = services.NewCertificateStore(services.CertificateStoreConfig{
+			CertStorage: certStorage,
+			CertRepo:    certRepo,
+		})
+		if err != nil {
+			logger.Warn("failed to initialize certificate store, SNI disabled", slog.Any("error", err))
+		} else {
+			// Load all certificates from database
+			ctx := context.Background()
+			if err := certStore.ReloadAll(ctx); err != nil {
+				logger.Warn("failed to load certificates", slog.Any("error", err))
+			} else {
+				logger.Info("certificate store initialized", slog.Int("certificates_loaded", certStore.Count()))
+			}
+			
+			// Set the GetCertificate function for SNI support
+			smtpConfig.GetCertificate = certStore.GetCertificateFunc()
+		}
+	}
+
 	smtpServer := smtp.NewSecureServer(smtpBackend, smtpConfig)
 
 	logger.Info("SMTP server configured",
 		slog.Int64("max_message_bytes", smtpServer.MaxMessageBytes),
 		slog.Int("max_recipients", smtpServer.MaxRecipients),
-		slog.Bool("allow_insecure_auth", smtpServer.AllowInsecureAuth))
+		slog.Bool("allow_insecure_auth", smtpServer.AllowInsecureAuth),
+		slog.Bool("sni_enabled", certStore != nil))
 
 	// Start servers
 	errChan := make(chan error, 2)

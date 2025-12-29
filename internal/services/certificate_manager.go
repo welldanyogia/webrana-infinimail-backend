@@ -52,6 +52,9 @@ type CertificateManagerService interface {
 
 	// SetAutoRenew enables or disables auto-renewal for a certificate
 	SetAutoRenew(ctx context.Context, domainID uint, autoRenew bool) error
+
+	// SetCertificateStore sets the certificate store for hot reload notifications
+	SetCertificateStore(certStore CertificateStore)
 }
 
 
@@ -62,6 +65,7 @@ type certificateManagerService struct {
 	certRepo      repository.CertificateRepository
 	domainRepo    repository.DomainRepository
 	domainManager DomainManagerService
+	certStore     CertificateStore // For hot reload notifications
 	config        CertificateManagerConfig
 }
 
@@ -181,6 +185,9 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 		return nil, fmt.Errorf("failed to update domain status to certificate_issued: %w", err)
 	}
 
+	// Trigger hot reload to make the new certificate available immediately
+	s.triggerHotReload(domain.Name)
+
 	return modelToCertificate(dbCert), nil
 }
 
@@ -271,6 +278,9 @@ func (s *certificateManagerService) RenewCertificate(ctx context.Context, domain
 		return nil, fmt.Errorf("failed to update certificate record: %w", err)
 	}
 
+	// Trigger hot reload to make the renewed certificate available immediately
+	s.triggerHotReload(domain.Name)
+
 	return modelToCertificate(existingCert), nil
 }
 
@@ -333,6 +343,21 @@ func (s *certificateManagerService) SetAutoRenew(ctx context.Context, domainID u
 	}
 
 	return nil
+}
+
+// SetCertificateStore sets the certificate store for hot reload notifications
+func (s *certificateManagerService) SetCertificateStore(certStore CertificateStore) {
+	s.certStore = certStore
+}
+
+// triggerHotReload triggers a hot reload of the certificate in the certificate store
+func (s *certificateManagerService) triggerHotReload(domainName string) {
+	if s.certStore == nil {
+		return
+	}
+	// Load and add the new certificate to the store
+	// This will also notify any registered callbacks (e.g., SMTP server)
+	_ = s.certStore.LoadAndAddCertificate(domainName)
 }
 
 // modelToCertificate converts a DomainCertificate model to a Certificate

@@ -40,6 +40,20 @@ type CertificateStore interface {
 
 	// Count returns the number of certificates in the store
 	Count() int
+
+	// LoadAndAddCertificate loads a certificate from disk and adds it to the store
+	// This is used for hot reload after a new certificate is generated
+	LoadAndAddCertificate(domainName string) error
+
+	// RegisterReloadCallback registers a callback function to be called after certificates are reloaded
+	RegisterReloadCallback(callback func())
+}
+
+// CertificateReloadNotifier is an interface for components that need to be notified
+// when certificates are reloaded (e.g., SMTP server)
+type CertificateReloadNotifier interface {
+	// OnCertificateReload is called when certificates have been reloaded
+	OnCertificateReload()
 }
 
 // certificateStore implements CertificateStore interface
@@ -49,6 +63,7 @@ type certificateStore struct {
 	defaultCert     *tls.Certificate
 	certStorage     CertStorage
 	certRepo        repository.CertificateRepository
+	reloadCallbacks []func()
 }
 
 // CertificateStoreConfig holds configuration for the certificate store
@@ -64,9 +79,10 @@ func NewCertificateStore(config CertificateStoreConfig) (CertificateStore, error
 	}
 
 	return &certificateStore{
-		certificates: make(map[string]*tls.Certificate),
-		certStorage:  config.CertStorage,
-		certRepo:     config.CertRepo,
+		certificates:    make(map[string]*tls.Certificate),
+		certStorage:     config.CertStorage,
+		certRepo:        config.CertRepo,
+		reloadCallbacks: make([]func(), 0),
 	}, nil
 }
 
@@ -208,7 +224,34 @@ func (s *certificateStore) ReloadAll(ctx context.Context) error {
 	s.certificates = newCerts
 	s.mu.Unlock()
 
+	// Notify all registered callbacks
+	s.notifyReloadCallbacks()
+
 	return nil
+}
+
+// notifyReloadCallbacks calls all registered reload callbacks
+func (s *certificateStore) notifyReloadCallbacks() {
+	s.mu.RLock()
+	callbacks := make([]func(), len(s.reloadCallbacks))
+	copy(callbacks, s.reloadCallbacks)
+	s.mu.RUnlock()
+
+	for _, callback := range callbacks {
+		if callback != nil {
+			callback()
+		}
+	}
+}
+
+// RegisterReloadCallback registers a callback function to be called after certificates are reloaded
+func (s *certificateStore) RegisterReloadCallback(callback func()) {
+	if callback == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.reloadCallbacks = append(s.reloadCallbacks, callback)
 }
 
 // GetCertificate retrieves a certificate from the in-memory store
@@ -268,6 +311,7 @@ func extractParentDomain(domain string) string {
 
 // LoadAndAddCertificate is a convenience method that loads a certificate from disk
 // and adds it to the in-memory store in one operation
+// This is used for hot reload after a new certificate is generated
 func (s *certificateStore) LoadAndAddCertificate(domainName string) error {
 	cert, err := s.LoadCertificate(domainName)
 	if err != nil {
@@ -280,5 +324,12 @@ func (s *certificateStore) LoadAndAddCertificate(domainName string) error {
 
 	// Also add mail subdomain mapping
 	mailSubdomain := fmt.Sprintf("mail.%s", domainName)
-	return s.AddCertificate(mailSubdomain, cert)
+	if err := s.AddCertificate(mailSubdomain, cert); err != nil {
+		return err
+	}
+
+	// Notify all registered callbacks
+	s.notifyReloadCallbacks()
+
+	return nil
 }

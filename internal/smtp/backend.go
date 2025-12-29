@@ -1,10 +1,12 @@
 package smtp
 
 import (
+	"context"
 	"crypto/tls"
 	"log/slog"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/emersion/go-smtp"
@@ -79,10 +81,23 @@ type ServerConfig struct {
 	WriteTimeout    time.Duration
 	AllowInsecure   bool
 	TLSConfig       *tls.Config
+	// SNI Support
+	GetCertificate  func(*tls.ClientHelloInfo) (*tls.Certificate, error)
+	DefaultCertFile string
+	DefaultKeyFile  string
 }
 
-// NewSecureServer creates a new SMTP server with security settings
-func NewSecureServer(backend *Backend, cfg *ServerConfig) *smtp.Server {
+// SecureSMTPServer wraps smtp.Server with certificate hot reload support
+type SecureSMTPServer struct {
+	*smtp.Server
+	mu              sync.RWMutex
+	getCertificate  func(*tls.ClientHelloInfo) (*tls.Certificate, error)
+	defaultCert     *tls.Certificate
+	logger          *slog.Logger
+}
+
+// NewSecureServer creates a new SMTP server with security settings and SNI support
+func NewSecureServer(backend *Backend, cfg *ServerConfig) *SecureSMTPServer {
 	s := smtp.NewServer(backend)
 
 	s.Addr = cfg.Addr
@@ -118,15 +133,117 @@ func NewSecureServer(backend *Backend, cfg *ServerConfig) *smtp.Server {
 	// Disable insecure authentication by default
 	s.AllowInsecureAuth = cfg.AllowInsecure
 
-	// Configure TLS if provided
-	if cfg.TLSConfig != nil {
-		s.TLSConfig = cfg.TLSConfig
-	}
-
 	// Set max line length to prevent buffer overflow attacks
 	s.MaxLineLength = DefaultMaxLineLength
 
-	return s
+	// Create secure server wrapper
+	secureServer := &SecureSMTPServer{
+		Server:         s,
+		getCertificate: cfg.GetCertificate,
+		logger:         backend.logger,
+	}
+
+	// Load default certificate if provided
+	if cfg.DefaultCertFile != "" && cfg.DefaultKeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(cfg.DefaultCertFile, cfg.DefaultKeyFile)
+		if err == nil {
+			secureServer.defaultCert = &cert
+		} else if backend.logger != nil {
+			backend.logger.Warn("failed to load default certificate", slog.Any("error", err))
+		}
+	}
+
+	// Configure TLS with SNI support
+	if cfg.TLSConfig != nil {
+		s.TLSConfig = cfg.TLSConfig
+	} else {
+		// Create TLS config with SNI support
+		s.TLSConfig = secureServer.createTLSConfig()
+	}
+
+	return secureServer
+}
+
+// createTLSConfig creates a TLS configuration with SNI support
+func (s *SecureSMTPServer) createTLSConfig() *tls.Config {
+	return &tls.Config{
+		MinVersion:     tls.VersionTLS12,
+		GetCertificate: s.getCertificateWithFallback,
+	}
+}
+
+// getCertificateWithFallback returns the appropriate certificate for the SNI hostname
+// Falls back to default certificate if no match is found
+func (s *SecureSMTPServer) getCertificateWithFallback(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	// Try the configured GetCertificate function first
+	if s.getCertificate != nil {
+		cert, err := s.getCertificate(hello)
+		if err == nil && cert != nil {
+			return cert, nil
+		}
+		// Log the error but continue to fallback
+		if s.logger != nil && err != nil {
+			s.logger.Debug("SNI certificate lookup failed, using fallback",
+				slog.String("server_name", hello.ServerName),
+				slog.Any("error", err))
+		}
+	}
+
+	// Fallback to default certificate
+	s.mu.RLock()
+	defaultCert := s.defaultCert
+	s.mu.RUnlock()
+
+	if defaultCert != nil {
+		return defaultCert, nil
+	}
+
+	// No certificate available
+	return nil, nil
+}
+
+// SetGetCertificateFunc sets the function used to retrieve certificates for SNI
+func (s *SecureSMTPServer) SetGetCertificateFunc(fn func(*tls.ClientHelloInfo) (*tls.Certificate, error)) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.getCertificate = fn
+}
+
+// SetDefaultCertificate sets the default certificate to use when no SNI match is found
+func (s *SecureSMTPServer) SetDefaultCertificate(cert *tls.Certificate) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.defaultCert = cert
+}
+
+// LoadDefaultCertificate loads a default certificate from files
+func (s *SecureSMTPServer) LoadDefaultCertificate(certFile, keyFile string) error {
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return err
+	}
+	s.SetDefaultCertificate(&cert)
+	return nil
+}
+
+// ReloadCertificates triggers a reload of all certificates
+// This is called after new certificates are generated
+func (s *SecureSMTPServer) ReloadCertificates(ctx context.Context, reloadFunc func(context.Context) error) error {
+	if reloadFunc == nil {
+		return nil
+	}
+	
+	if err := reloadFunc(ctx); err != nil {
+		if s.logger != nil {
+			s.logger.Error("failed to reload certificates", slog.Any("error", err))
+		}
+		return err
+	}
+	
+	if s.logger != nil {
+		s.logger.Info("certificates reloaded successfully")
+	}
+	return nil
 }
 
 // LoadServerConfigFromEnv loads server configuration from environment variables
@@ -161,9 +278,13 @@ func LoadServerConfigFromEnv() *ServerConfig {
 		}
 	}
 
-	// Load TLS configuration if certificate and key are provided
-	certFile := os.Getenv("SMTP_TLS_CERT")
-	keyFile := os.Getenv("SMTP_TLS_KEY")
+	// Load default certificate paths for fallback
+	cfg.DefaultCertFile = os.Getenv("SMTP_TLS_CERT")
+	cfg.DefaultKeyFile = os.Getenv("SMTP_TLS_KEY")
+
+	// Legacy TLS configuration (used if no SNI GetCertificate is provided)
+	certFile := cfg.DefaultCertFile
+	keyFile := cfg.DefaultKeyFile
 	if certFile != "" && keyFile != "" {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 		if err == nil {
