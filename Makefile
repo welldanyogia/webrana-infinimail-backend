@@ -18,6 +18,11 @@ test-integration:
 test-e2e:
 	go test ./tests/e2e/... -v -tags=e2e
 
+# Run API endpoint tests against real backend (requires backend running)
+test-api:
+	@echo "Make sure backend is running on localhost:8080"
+	go test ./tests/api/... -v -tags=api
+
 # Run tests with coverage report
 test-coverage:
 	go test ./... -coverprofile=coverage.out -covermode=atomic
