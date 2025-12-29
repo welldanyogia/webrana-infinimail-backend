@@ -40,18 +40,15 @@ func TestExportBIND(t *testing.T) {
 
 	result := exporter.ExportBIND(guide, "example.com")
 
-	// Verify header
-	assert.Contains(t, result, "; DNS Zone File for example.com")
-	assert.Contains(t, result, "$TTL 3600")
+	// Cloudflare-compatible BIND format (no $TTL directive, TTL per record, tab-separated)
+	// Verify MX record with @ for root domain
+	assert.Contains(t, result, "@\t3600\tIN\tMX\t10\tmail.infinimail.webrana.id.")
 
-	// Verify MX record
-	assert.Contains(t, result, "example.com.  IN  MX  10  mail.infinimail.webrana.id.")
+	// Verify A record with subdomain extracted
+	assert.Contains(t, result, "mail\t3600\tIN\tA\t103.123.45.67")
 
-	// Verify A record
-	assert.Contains(t, result, "mail.example.com.  IN  A  103.123.45.67")
-
-	// Verify TXT record
-	assert.Contains(t, result, "_infinimail.example.com.  IN  TXT  \"infinimail-verify=abc123xyz\"")
+	// Verify TXT record with subdomain extracted
+	assert.Contains(t, result, "_infinimail\t3600\tIN\tTXT\t\"infinimail-verify=abc123xyz\"")
 }
 
 func TestExportCloudflare(t *testing.T) {
@@ -163,7 +160,8 @@ func TestExport_BIND(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, ExportFormatBIND, result.Format)
 	assert.Equal(t, "example.com.zone", result.Filename)
-	assert.Contains(t, result.Content.(string), "DNS Zone File")
+	// Cloudflare-compatible format uses @ for root domain
+	assert.Contains(t, result.Content.(string), "@\t3600\tIN\tMX")
 }
 
 func TestExport_Cloudflare(t *testing.T) {
