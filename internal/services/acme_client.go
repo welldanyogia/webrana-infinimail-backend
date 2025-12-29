@@ -10,6 +10,9 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"log"
+	"net"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/acme"
@@ -237,25 +240,184 @@ func (c *acmeClient) CompleteDNSChallenge(ctx context.Context, domain string) er
 		return fmt.Errorf("no active challenge found for domain %s", domain)
 	}
 
-	// Accept the challenge
-	_, err := c.client.Accept(ctx, challenge)
-	if err != nil {
-		return fmt.Errorf("failed to accept challenge: %w", err)
-	}
-
 	// Get stored order
 	order, ok := c.activeOrders[domain]
 	if !ok {
 		return fmt.Errorf("no active order found for domain %s", domain)
 	}
 
-	// Wait for order to be ready
-	_, err = c.client.WaitOrder(ctx, order.URI)
+	// Compute expected TXT record value for verification
+	expectedTXT, err := c.client.DNS01ChallengeRecord(challenge.Token)
 	if err != nil {
-		return fmt.Errorf("failed waiting for order: %w", err)
+		return fmt.Errorf("failed to compute expected TXT record: %w", err)
 	}
 
-	return nil
+	log.Printf("[ACME] Starting DNS-01 challenge for domain: %s", domain)
+	log.Printf("[ACME] Expected TXT record: _acme-challenge.%s = %s", domain, expectedTXT)
+
+	// Pre-check: Verify TXT record exists before accepting challenge
+	// This helps catch DNS propagation issues early
+	txtFound, txtValues := c.verifyDNSTXTRecord(domain, expectedTXT)
+	if !txtFound {
+		log.Printf("[ACME] WARNING: TXT record not found or doesn't match. Found values: %v", txtValues)
+		log.Printf("[ACME] Waiting for DNS propagation...")
+	} else {
+		log.Printf("[ACME] TXT record verified successfully")
+	}
+
+	// Wait for DNS propagation before accepting challenge
+	// Let's Encrypt validates from multiple vantage points globally
+	propagationDelay := 90 * time.Second // 90 seconds for DNS propagation
+	log.Printf("[ACME] Waiting %v for DNS propagation...", propagationDelay)
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(propagationDelay):
+		// Continue after propagation delay
+	}
+
+	// Re-verify TXT record after waiting
+	txtFound, txtValues = c.verifyDNSTXTRecord(domain, expectedTXT)
+	if !txtFound {
+		return fmt.Errorf("DNS TXT record verification failed after waiting. Expected _acme-challenge.%s with value %s, but found: %v. Please ensure the TXT record is properly configured and has propagated", domain, expectedTXT, txtValues)
+	}
+	log.Printf("[ACME] TXT record verified after propagation delay")
+
+	// Accept the challenge - this tells Let's Encrypt to start validation
+	log.Printf("[ACME] Accepting challenge...")
+	_, err = c.client.Accept(ctx, challenge)
+	if err != nil {
+		return fmt.Errorf("failed to accept challenge: %w", err)
+	}
+	log.Printf("[ACME] Challenge accepted, waiting for Let's Encrypt validation...")
+
+	// Poll authorization status to get detailed error information
+	// This is more informative than just waiting for order
+	authzURL := order.AuthzURLs[0]
+	authzCtx, authzCancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer authzCancel()
+
+	// Poll for authorization status with detailed error reporting
+	pollInterval := 5 * time.Second
+	maxAttempts := 60 // 5 minutes max
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		authz, err := c.client.GetAuthorization(authzCtx, authzURL)
+		if err != nil {
+			log.Printf("[ACME] Error getting authorization status: %v", err)
+			return fmt.Errorf("failed to get authorization status: %w", err)
+		}
+
+		log.Printf("[ACME] Authorization status: %s (attempt %d/%d)", authz.Status, attempt+1, maxAttempts)
+
+		switch authz.Status {
+		case acme.StatusValid:
+			log.Printf("[ACME] Authorization validated successfully!")
+			// Authorization is valid, now wait for order to be ready
+			orderCtx, orderCancel := context.WithTimeout(ctx, 2*time.Minute)
+			defer orderCancel()
+			_, err = c.client.WaitOrder(orderCtx, order.URI)
+			if err != nil {
+				return fmt.Errorf("failed waiting for order after authorization: %w", err)
+			}
+			return nil
+
+		case acme.StatusInvalid:
+			// Get detailed error from challenge
+			errDetails := c.getAuthorizationErrorDetails(authz)
+			log.Printf("[ACME] Authorization INVALID: %s", errDetails)
+			return fmt.Errorf("ACME authorization failed: %s", errDetails)
+
+		case acme.StatusPending, acme.StatusProcessing:
+			// Still processing, continue polling
+			log.Printf("[ACME] Authorization still processing, waiting %v...", pollInterval)
+			select {
+			case <-authzCtx.Done():
+				return fmt.Errorf("timeout waiting for authorization: %w", authzCtx.Err())
+			case <-time.After(pollInterval):
+				continue
+			}
+
+		case acme.StatusDeactivated, acme.StatusExpired, acme.StatusRevoked:
+			return fmt.Errorf("authorization is %s, cannot proceed", authz.Status)
+
+		default:
+			log.Printf("[ACME] Unknown authorization status: %s", authz.Status)
+		}
+	}
+
+	return fmt.Errorf("timeout: authorization did not complete within %d attempts", maxAttempts)
+}
+
+// verifyDNSTXTRecord checks if the expected TXT record exists
+func (c *acmeClient) verifyDNSTXTRecord(domain, expectedValue string) (bool, []string) {
+	challengeDomain := "_acme-challenge." + domain
+
+	// Try multiple DNS servers for verification
+	dnsServers := []string{
+		"8.8.8.8:53",        // Google DNS
+		"1.1.1.1:53",        // Cloudflare DNS
+		"208.67.222.222:53", // OpenDNS
+	}
+
+	var allValues []string
+	found := false
+
+	for _, server := range dnsServers {
+		resolver := &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{Timeout: 10 * time.Second}
+				return d.DialContext(ctx, "udp", server)
+			},
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		txtRecords, err := resolver.LookupTXT(ctx, challengeDomain)
+		cancel()
+
+		if err != nil {
+			log.Printf("[ACME] DNS lookup via %s failed: %v", server, err)
+			continue
+		}
+
+		for _, txt := range txtRecords {
+			allValues = append(allValues, txt)
+			if strings.TrimSpace(txt) == strings.TrimSpace(expectedValue) {
+				found = true
+				log.Printf("[ACME] TXT record found via %s: %s", server, txt)
+			}
+		}
+	}
+
+	return found, allValues
+}
+
+// getAuthorizationErrorDetails extracts detailed error information from authorization
+func (c *acmeClient) getAuthorizationErrorDetails(authz *acme.Authorization) string {
+	var details []string
+
+	for _, ch := range authz.Challenges {
+		if ch.Status == acme.StatusInvalid && ch.Error != nil {
+			// ch.Error is *acme.Error type
+			if acmeErr, ok := ch.Error.(*acme.Error); ok {
+				errMsg := fmt.Sprintf("Challenge %s failed: %s (type: %s)", ch.Type, acmeErr.Detail, acmeErr.ProblemType)
+				if acmeErr.StatusCode != 0 {
+					errMsg += fmt.Sprintf(" (HTTP %d)", acmeErr.StatusCode)
+				}
+				details = append(details, errMsg)
+			} else {
+				// Fallback for generic error
+				details = append(details, fmt.Sprintf("Challenge %s failed: %v", ch.Type, ch.Error))
+			}
+		}
+	}
+
+	if len(details) == 0 {
+		return "Authorization failed with no specific error details"
+	}
+
+	return strings.Join(details, "; ")
 }
 
 

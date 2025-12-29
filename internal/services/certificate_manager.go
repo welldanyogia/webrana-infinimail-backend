@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/models"
@@ -107,6 +108,8 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 		return nil, fmt.Errorf("domain must be in dns_verified status to generate certificate, current status: %s", domain.Status)
 	}
 
+	log.Printf("[CertManager] Starting certificate generation for domain: %s", domain.Name)
+
 	// Update domain status to pending_certificate
 	if err := s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusPendingCertificate, ""); err != nil {
 		return nil, fmt.Errorf("failed to update domain status to pending_certificate: %w", err)
@@ -117,14 +120,18 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 		domain.Name,
 		fmt.Sprintf("mail.%s", domain.Name),
 	}
+	log.Printf("[CertManager] Requesting certificate for domains: %v", domains)
 
 	// Get DNS challenge for the primary domain
+	log.Printf("[CertManager] Getting DNS challenge from ACME server...")
 	challengeInfo, err := s.acmeClient.GetDNSChallenge(ctx, domain.Name)
 	if err != nil {
 		// Update status to failed
 		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, fmt.Sprintf("ACME challenge failed: %v", err))
 		return nil, fmt.Errorf("failed to get DNS challenge: %w", err)
 	}
+
+	log.Printf("[CertManager] DNS challenge received. TXT record required: _acme-challenge.%s = %s", domain.Name, challengeInfo.TXTRecord)
 
 	// Store the ACME challenge info in domain error message temporarily
 	// This allows the user to see what TXT record they need to add
@@ -134,20 +141,29 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 	}
 
 	// Complete DNS challenge (Let's Encrypt will verify the _acme-challenge TXT record)
+	log.Printf("[CertManager] Completing DNS challenge (this may take a few minutes)...")
 	if err := s.acmeClient.CompleteDNSChallenge(ctx, domain.Name); err != nil {
 		// Update status to failed with helpful message
-		errMsg := fmt.Sprintf("ACME DNS challenge failed. Please add TXT record: Name=_acme-challenge.%s Value=%s", domain.Name, challengeInfo.TXTRecord)
+		errMsg := fmt.Sprintf("ACME DNS challenge failed: %v. Please ensure TXT record exists: Name=_acme-challenge.%s Value=%s", err, domain.Name, challengeInfo.TXTRecord)
+		log.Printf("[CertManager] ERROR: %s", errMsg)
 		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, errMsg)
 		return nil, fmt.Errorf("failed to complete DNS challenge: %w", err)
 	}
 
+	log.Printf("[CertManager] DNS challenge completed successfully!")
+
 	// Request certificate from ACME
+	log.Printf("[CertManager] Requesting certificate from ACME server...")
 	bundle, err := s.acmeClient.RequestCertificate(ctx, domains)
 	if err != nil {
 		// Update status to failed
-		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, fmt.Sprintf("Certificate request failed: %v", err))
+		errMsg := fmt.Sprintf("Certificate request failed: %v", err)
+		log.Printf("[CertManager] ERROR: %s", errMsg)
+		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, errMsg)
 		return nil, fmt.Errorf("failed to request certificate: %w", err)
 	}
+
+	log.Printf("[CertManager] Certificate received! Expires at: %v", bundle.ExpiresAt)
 
 	// Save certificate to disk
 	storedCert, err := s.certStorage.SaveCertificate(domain.Name, bundle)
@@ -156,6 +172,8 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, fmt.Sprintf("Certificate storage failed: %v", err))
 		return nil, fmt.Errorf("failed to save certificate: %w", err)
 	}
+
+	log.Printf("[CertManager] Certificate saved to disk: %s", storedCert.CertPath)
 
 	// Check if certificate already exists in database
 	existingCert, err := s.certRepo.GetByDomainID(ctx, domain.ID)
@@ -198,6 +216,8 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 
 	// Trigger hot reload to make the new certificate available immediately
 	s.triggerHotReload(domain.Name)
+
+	log.Printf("[CertManager] Certificate generation completed successfully for domain: %s", domain.Name)
 
 	return modelToCertificate(dbCert), nil
 }
