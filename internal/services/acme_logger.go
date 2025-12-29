@@ -10,121 +10,170 @@ import (
 	"time"
 )
 
-// ACMELogLevel represents the severity of a log entry
-type ACMELogLevel string
+// DomainSetupLogLevel represents the severity of a log entry
+type DomainSetupLogLevel string
 
 const (
-	ACMELogInfo    ACMELogLevel = "INFO"
-	ACMELogWarning ACMELogLevel = "WARNING"
-	ACMELogError   ACMELogLevel = "ERROR"
-	ACMELogDebug   ACMELogLevel = "DEBUG"
+	LogInfo    DomainSetupLogLevel = "INFO"
+	LogWarning DomainSetupLogLevel = "WARNING"
+	LogError   DomainSetupLogLevel = "ERROR"
+	LogDebug   DomainSetupLogLevel = "DEBUG"
 )
 
-// ACMELogEntry represents a single log entry
-type ACMELogEntry struct {
-	Timestamp time.Time    `json:"timestamp"`
-	Level     ACMELogLevel `json:"level"`
-	Domain    string       `json:"domain,omitempty"`
-	Step      string       `json:"step"`
-	Message   string       `json:"message"`
-	Details   interface{}  `json:"details,omitempty"`
+// DomainSetupStep represents the step in domain setup process
+type DomainSetupStep string
+
+const (
+	StepDomainCreate     DomainSetupStep = "domain_create"
+	StepDNSGuide         DomainSetupStep = "dns_guide"
+	StepDNSExport        DomainSetupStep = "dns_export"
+	StepDNSVerify        DomainSetupStep = "dns_verify"
+	StepDNSVerifyMX      DomainSetupStep = "dns_verify_mx"
+	StepDNSVerifyA       DomainSetupStep = "dns_verify_a"
+	StepDNSVerifyTXT     DomainSetupStep = "dns_verify_txt"
+	StepACMEInit         DomainSetupStep = "acme_init"
+	StepACMEAccount      DomainSetupStep = "acme_account"
+	StepACMEOrder        DomainSetupStep = "acme_order"
+	StepACMEChallenge    DomainSetupStep = "acme_challenge"
+	StepACMEDNSVerify    DomainSetupStep = "acme_dns_verify"
+	StepACMEFinalize     DomainSetupStep = "acme_finalize"
+	StepCertStore        DomainSetupStep = "cert_store"
+	StepDomainActivate   DomainSetupStep = "domain_activate"
+	StepSessionStart     DomainSetupStep = "session_start"
+	StepSessionEnd       DomainSetupStep = "session_end"
+)
+
+// DomainSetupLogEntry represents a single log entry
+type DomainSetupLogEntry struct {
+	Timestamp time.Time           `json:"timestamp"`
+	Level     DomainSetupLogLevel `json:"level"`
+	Domain    string              `json:"domain,omitempty"`
+	Step      DomainSetupStep     `json:"step"`
+	Message   string              `json:"message"`
+	Details   interface{}         `json:"details,omitempty"`
 }
 
-// ACMEDomainLog represents all logs for a specific domain
-type ACMEDomainLog struct {
-	Domain    string         `json:"domain"`
-	StartedAt time.Time      `json:"started_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	Status    string         `json:"status"` // "in_progress", "success", "failed"
-	Entries   []ACMELogEntry `json:"entries"`
+// DomainSetupLog represents all logs for a specific domain setup
+type DomainSetupLog struct {
+	Domain    string                `json:"domain"`
+	StartedAt time.Time             `json:"started_at"`
+	UpdatedAt time.Time             `json:"updated_at"`
+	Status    string                `json:"status"` // "in_progress", "success", "failed"
+	Entries   []DomainSetupLogEntry `json:"entries"`
 }
 
-// ACMELogger handles logging for ACME operations
-type ACMELogger struct {
+// DomainSetupLogger handles logging for domain setup operations
+type DomainSetupLogger struct {
 	mu       sync.RWMutex
 	logDir   string
-	logs     map[string]*ACMEDomainLog // domain -> log
-	maxLogs  int                       // max number of domain logs to keep in memory
+	logs     map[string]*DomainSetupLog // domain -> log
+	maxLogs  int                        // max number of domain logs to keep in memory
 }
 
-// NewACMELogger creates a new ACME logger
-func NewACMELogger(logDir string) (*ACMELogger, error) {
+// NewDomainSetupLogger creates a new domain setup logger
+func NewDomainSetupLogger(logDir string) (*DomainSetupLogger, error) {
 	if logDir == "" {
-		logDir = "./logs/acme"
+		logDir = "./logs/domain-setup"
 	}
 
 	// Create log directory if it doesn't exist
 	if err := os.MkdirAll(logDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create ACME log directory: %w", err)
+		return nil, fmt.Errorf("failed to create domain setup log directory: %w", err)
 	}
 
-	return &ACMELogger{
+	return &DomainSetupLogger{
 		logDir:  logDir,
-		logs:    make(map[string]*ACMEDomainLog),
+		logs:    make(map[string]*DomainSetupLog),
 		maxLogs: 100, // Keep last 100 domain logs in memory
 	}, nil
 }
 
+// Aliases for backward compatibility with ACME logger
+type ACMELogLevel = DomainSetupLogLevel
+type ACMELogEntry = DomainSetupLogEntry
+type ACMEDomainLog = DomainSetupLog
+type ACMELogger = DomainSetupLogger
+
+const (
+	ACMELogInfo    = LogInfo
+	ACMELogWarning = LogWarning
+	ACMELogError   = LogError
+	ACMELogDebug   = LogDebug
+)
+
+// NewACMELogger creates a new ACME logger (alias for backward compatibility)
+func NewACMELogger(logDir string) (*DomainSetupLogger, error) {
+	if logDir == "" {
+		logDir = "./logs/domain-setup"
+	}
+	return NewDomainSetupLogger(logDir)
+}
+
 
 // StartDomainLog starts a new log session for a domain
-func (l *ACMELogger) StartDomainLog(domain string) {
+func (l *DomainSetupLogger) StartDomainLog(domain string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	now := time.Now()
-	l.logs[domain] = &ACMEDomainLog{
+	l.logs[domain] = &DomainSetupLog{
 		Domain:    domain,
 		StartedAt: now,
 		UpdatedAt: now,
 		Status:    "in_progress",
-		Entries:   []ACMELogEntry{},
+		Entries:   []DomainSetupLogEntry{},
 	}
 
-	l.addEntryLocked(domain, ACMELogInfo, "session_start", "ACME certificate generation started", nil)
+	l.addEntryLocked(domain, LogInfo, StepSessionStart, "Domain setup session started", nil)
 }
 
 // Log adds a log entry for a domain
-func (l *ACMELogger) Log(domain string, level ACMELogLevel, step, message string, details interface{}) {
+func (l *DomainSetupLogger) Log(domain string, level DomainSetupLogLevel, step DomainSetupStep, message string, details interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.addEntryLocked(domain, level, step, message, details)
 }
 
 // LogInfo adds an info log entry
-func (l *ACMELogger) LogInfo(domain, step, message string) {
-	l.Log(domain, ACMELogInfo, step, message, nil)
+func (l *DomainSetupLogger) LogInfo(domain string, step DomainSetupStep, message string) {
+	l.Log(domain, LogInfo, step, message, nil)
+}
+
+// LogInfoWithDetails adds an info log entry with details
+func (l *DomainSetupLogger) LogInfoWithDetails(domain string, step DomainSetupStep, message string, details interface{}) {
+	l.Log(domain, LogInfo, step, message, details)
 }
 
 // LogWarning adds a warning log entry
-func (l *ACMELogger) LogWarning(domain, step, message string, details interface{}) {
-	l.Log(domain, ACMELogWarning, step, message, details)
+func (l *DomainSetupLogger) LogWarning(domain string, step DomainSetupStep, message string, details interface{}) {
+	l.Log(domain, LogWarning, step, message, details)
 }
 
 // LogError adds an error log entry
-func (l *ACMELogger) LogError(domain, step, message string, err error) {
+func (l *DomainSetupLogger) LogError(domain string, step DomainSetupStep, message string, err error) {
 	details := map[string]string{"error": err.Error()}
-	l.Log(domain, ACMELogError, step, message, details)
+	l.Log(domain, LogError, step, message, details)
 }
 
 // LogDebug adds a debug log entry
-func (l *ACMELogger) LogDebug(domain, step, message string, details interface{}) {
-	l.Log(domain, ACMELogDebug, step, message, details)
+func (l *DomainSetupLogger) LogDebug(domain string, step DomainSetupStep, message string, details interface{}) {
+	l.Log(domain, LogDebug, step, message, details)
 }
 
-func (l *ACMELogger) addEntryLocked(domain string, level ACMELogLevel, step, message string, details interface{}) {
+func (l *DomainSetupLogger) addEntryLocked(domain string, level DomainSetupLogLevel, step DomainSetupStep, message string, details interface{}) {
 	// Ensure domain log exists
 	if _, exists := l.logs[domain]; !exists {
 		now := time.Now()
-		l.logs[domain] = &ACMEDomainLog{
+		l.logs[domain] = &DomainSetupLog{
 			Domain:    domain,
 			StartedAt: now,
 			UpdatedAt: now,
 			Status:    "in_progress",
-			Entries:   []ACMELogEntry{},
+			Entries:   []DomainSetupLogEntry{},
 		}
 	}
 
-	entry := ACMELogEntry{
+	entry := DomainSetupLogEntry{
 		Timestamp: time.Now(),
 		Level:     level,
 		Domain:    domain,
@@ -135,10 +184,13 @@ func (l *ACMELogger) addEntryLocked(domain string, level ACMELogLevel, step, mes
 
 	l.logs[domain].Entries = append(l.logs[domain].Entries, entry)
 	l.logs[domain].UpdatedAt = entry.Timestamp
+	
+	// Auto-save after each entry for real-time viewing
+	l.saveToFileLocked(domain)
 }
 
 // SetStatus sets the final status of a domain log
-func (l *ACMELogger) SetStatus(domain, status string) {
+func (l *DomainSetupLogger) SetStatus(domain, status string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -152,20 +204,20 @@ func (l *ACMELogger) SetStatus(domain, status string) {
 }
 
 // MarkSuccess marks the domain log as successful
-func (l *ACMELogger) MarkSuccess(domain string) {
-	l.Log(domain, ACMELogInfo, "session_end", "ACME certificate generation completed successfully", nil)
+func (l *DomainSetupLogger) MarkSuccess(domain string) {
+	l.Log(domain, LogInfo, StepSessionEnd, "Domain setup completed successfully", nil)
 	l.SetStatus(domain, "success")
 }
 
 // MarkFailed marks the domain log as failed
-func (l *ACMELogger) MarkFailed(domain string, err error) {
-	l.LogError(domain, "session_end", "ACME certificate generation failed", err)
+func (l *DomainSetupLogger) MarkFailed(domain string, err error) {
+	l.LogError(domain, StepSessionEnd, "Domain setup failed", err)
 	l.SetStatus(domain, "failed")
 }
 
 
 // GetDomainLog returns the log for a specific domain
-func (l *ACMELogger) GetDomainLog(domain string) (*ACMEDomainLog, bool) {
+func (l *DomainSetupLogger) GetDomainLog(domain string) (*DomainSetupLog, bool) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
@@ -184,13 +236,16 @@ func (l *ACMELogger) GetDomainLog(domain string) (*ACMEDomainLog, bool) {
 }
 
 // GetAllLogs returns all domain logs (summary)
-func (l *ACMELogger) GetAllLogs() []ACMEDomainLogSummary {
+func (l *DomainSetupLogger) GetAllLogs() []DomainSetupLogSummary {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
-	summaries := make([]ACMEDomainLogSummary, 0, len(l.logs))
+	// Also load logs from files that aren't in memory
+	l.loadAllFromFilesLocked()
+
+	summaries := make([]DomainSetupLogSummary, 0, len(l.logs))
 	for _, log := range l.logs {
-		summaries = append(summaries, ACMEDomainLogSummary{
+		summaries = append(summaries, DomainSetupLogSummary{
 			Domain:     log.Domain,
 			StartedAt:  log.StartedAt,
 			UpdatedAt:  log.UpdatedAt,
@@ -201,8 +256,8 @@ func (l *ACMELogger) GetAllLogs() []ACMEDomainLogSummary {
 	return summaries
 }
 
-// ACMEDomainLogSummary is a summary of a domain log
-type ACMEDomainLogSummary struct {
+// DomainSetupLogSummary is a summary of a domain log
+type DomainSetupLogSummary struct {
 	Domain     string    `json:"domain"`
 	StartedAt  time.Time `json:"started_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
@@ -210,8 +265,11 @@ type ACMEDomainLogSummary struct {
 	EntryCount int       `json:"entry_count"`
 }
 
+// Alias for backward compatibility
+type ACMEDomainLogSummary = DomainSetupLogSummary
+
 // saveToFileLocked saves the domain log to a file (must be called with lock held)
-func (l *ACMELogger) saveToFileLocked(domain string) error {
+func (l *DomainSetupLogger) saveToFileLocked(domain string) error {
 	log, exists := l.logs[domain]
 	if !exists {
 		return nil
@@ -231,14 +289,14 @@ func (l *ACMELogger) saveToFileLocked(domain string) error {
 }
 
 // loadFromFileLocked loads a domain log from file (must be called with lock held)
-func (l *ACMELogger) loadFromFileLocked(domain string) (*ACMEDomainLog, bool) {
+func (l *DomainSetupLogger) loadFromFileLocked(domain string) (*DomainSetupLog, bool) {
 	filename := l.getLogFilename(domain)
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, false
 	}
 
-	var log ACMEDomainLog
+	var log DomainSetupLog
 	if err := json.Unmarshal(data, &log); err != nil {
 		return nil, false
 	}
@@ -247,7 +305,24 @@ func (l *ACMELogger) loadFromFileLocked(domain string) (*ACMEDomainLog, bool) {
 	return &log, true
 }
 
-func (l *ACMELogger) getLogFilename(domain string) string {
+// loadAllFromFilesLocked loads all log files into memory
+func (l *DomainSetupLogger) loadAllFromFilesLocked() {
+	files, err := os.ReadDir(l.logDir)
+	if err != nil {
+		return
+	}
+
+	for _, f := range files {
+		if !f.IsDir() && filepath.Ext(f.Name()) == ".json" {
+			domain := f.Name()[:len(f.Name())-5] // Remove .json extension
+			if _, exists := l.logs[domain]; !exists {
+				l.loadFromFileLocked(domain)
+			}
+		}
+	}
+}
+
+func (l *DomainSetupLogger) getLogFilename(domain string) string {
 	// Sanitize domain name for filename - replace invalid characters with underscore
 	safeDomain := domain
 	invalidChars := []string{"/", "\\", ":", "*", "?", "\"", "<", ">", "|"}
@@ -258,7 +333,7 @@ func (l *ACMELogger) getLogFilename(domain string) string {
 }
 
 // ListLogFiles returns list of all log files
-func (l *ACMELogger) ListLogFiles() ([]string, error) {
+func (l *DomainSetupLogger) ListLogFiles() ([]string, error) {
 	files, err := os.ReadDir(l.logDir)
 	if err != nil {
 		return nil, err
@@ -274,19 +349,24 @@ func (l *ACMELogger) ListLogFiles() ([]string, error) {
 	return domains, nil
 }
 
-// Global ACME logger instance
-var globalACMELogger *ACMELogger
-var acmeLoggerOnce sync.Once
+// Global domain setup logger instance
+var globalDomainSetupLogger *DomainSetupLogger
+var domainSetupLoggerOnce sync.Once
 
-// GetACMELogger returns the global ACME logger instance
-func GetACMELogger() *ACMELogger {
-	acmeLoggerOnce.Do(func() {
+// GetDomainSetupLogger returns the global domain setup logger instance
+func GetDomainSetupLogger() *DomainSetupLogger {
+	domainSetupLoggerOnce.Do(func() {
 		var err error
-		globalACMELogger, err = NewACMELogger("./logs/acme")
+		globalDomainSetupLogger, err = NewDomainSetupLogger("./logs/domain-setup")
 		if err != nil {
 			// Fallback to temp directory
-			globalACMELogger, _ = NewACMELogger(os.TempDir() + "/acme-logs")
+			globalDomainSetupLogger, _ = NewDomainSetupLogger(os.TempDir() + "/domain-setup-logs")
 		}
 	})
-	return globalACMELogger
+	return globalDomainSetupLogger
+}
+
+// GetACMELogger returns the global ACME logger instance (alias for backward compatibility)
+func GetACMELogger() *DomainSetupLogger {
+	return GetDomainSetupLogger()
 }

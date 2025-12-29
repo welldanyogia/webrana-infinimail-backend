@@ -427,8 +427,16 @@ func (h *DomainHandler) GetStatus(c echo.Context) error {
 	return response.Success(c, statusResponse)
 }
 
+// RetryRequest represents the request body for retry endpoint
+type RetryRequest struct {
+	// ResetTo allows specifying which status to reset to
+	// Options: "pending_dns", "dns_verified"
+	ResetTo string `json:"reset_to,omitempty"`
+}
+
 // Retry handles POST /api/domains/:id/retry
 // Allows retry from failed step
+// Body: { "reset_to": "dns_verified" } to retry certificate generation
 func (h *DomainHandler) Retry(c echo.Context) error {
 	if h.domainManager == nil {
 		return response.InternalError(c, "domain manager not configured")
@@ -438,6 +446,10 @@ func (h *DomainHandler) Retry(c echo.Context) error {
 	if err != nil {
 		return response.BadRequest(c, "invalid domain ID")
 	}
+
+	// Parse optional request body
+	var req RetryRequest
+	_ = c.Bind(&req) // Ignore error, body is optional
 
 	domain, err := h.repo.GetByID(c.Request().Context(), uint(id))
 	if err != nil {
@@ -453,10 +465,29 @@ func (h *DomainHandler) Retry(c echo.Context) error {
 
 	switch domain.Status {
 	case models.StatusFailed:
-		// Determine the step that failed based on error message or previous state
-		// For simplicity, reset to pending_dns to allow full retry
-		newStatus = models.StatusPendingDNS
-		message = "Domain reset to pending_dns status for retry"
+		// Check if user wants to reset to a specific status
+		if req.ResetTo == "dns_verified" {
+			// Reset to dns_verified to retry certificate generation
+			newStatus = models.StatusDNSVerified
+			message = "Domain reset to dns_verified status for certificate retry"
+		} else if req.ResetTo == "pending_dns" {
+			// Reset to pending_dns to redo DNS verification
+			newStatus = models.StatusPendingDNS
+			message = "Domain reset to pending_dns status for retry"
+		} else {
+			// Default: check error message to determine best reset point
+			// If error is related to certificate/ACME, reset to dns_verified
+			if strings.Contains(strings.ToLower(domain.ErrorMessage), "acme") ||
+				strings.Contains(strings.ToLower(domain.ErrorMessage), "certificate") ||
+				strings.Contains(strings.ToLower(domain.ErrorMessage), "dns txt") ||
+				strings.Contains(strings.ToLower(domain.ErrorMessage), "_acme-challenge") {
+				newStatus = models.StatusDNSVerified
+				message = "Domain reset to dns_verified status for certificate retry"
+			} else {
+				newStatus = models.StatusPendingDNS
+				message = "Domain reset to pending_dns status for retry"
+			}
+		}
 	case models.StatusPendingDNS:
 		// Already in pending_dns, just clear error
 		newStatus = models.StatusPendingDNS
