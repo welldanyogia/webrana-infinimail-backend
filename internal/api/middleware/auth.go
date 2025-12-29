@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// APIKeyAuth validates API key from Authorization header.
+// APIKeyAuth validates API key from Authorization or X-API-Key header.
 // Uses constant-time comparison to prevent timing attacks.
 func APIKeyAuth(logger *slog.Logger) echo.MiddlewareFunc {
 	validAPIKey := os.Getenv("API_KEY")
@@ -32,22 +32,28 @@ func APIKeyAuth(logger *slog.Logger) echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			authHeader := c.Request().Header.Get("Authorization")
-			if authHeader == "" {
+			// Try X-API-Key header first, then Authorization header
+			token := c.Request().Header.Get("X-API-Key")
+			if token == "" {
+				authHeader := c.Request().Header.Get("Authorization")
+				if authHeader != "" {
+					// Extract token from "Bearer <token>" format
+					token = strings.TrimPrefix(authHeader, "Bearer ")
+					token = strings.TrimSpace(token)
+				}
+			}
+
+			if token == "" {
 				if logger != nil {
-					logger.Warn("missing authorization header",
+					logger.Warn("missing API key",
 						slog.String("ip", c.RealIP()),
 						slog.String("path", path))
 				}
 				return echo.NewHTTPError(401, map[string]string{
-					"error": "missing authorization header",
+					"error": "missing API key",
 					"code":  "UNAUTHORIZED",
 				})
 			}
-
-			// Extract token from "Bearer <token>" format
-			token := strings.TrimPrefix(authHeader, "Bearer ")
-			token = strings.TrimSpace(token)
 
 			// Use constant-time comparison to prevent timing attacks
 			if subtle.ConstantTimeCompare([]byte(token), []byte(validAPIKey)) != 1 {
