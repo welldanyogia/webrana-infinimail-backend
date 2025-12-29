@@ -54,7 +54,11 @@ services:
       SMTP_ALLOW_INSECURE: "false"
       SMTP_MAX_MESSAGE_SIZE: 26214400
       SMTP_MAX_RECIPIENTS: 100
-      
+
+      # SMTP TLS (STARTTLS)
+      SMTP_TLS_CERT: /etc/ssl/smtp/fullchain.pem
+      SMTP_TLS_KEY: /etc/ssl/smtp/privkey.pem
+
       # Storage
       ATTACHMENT_STORAGE_PATH: /app/attachments
       MAX_ATTACHMENT_SIZE: 26214400
@@ -69,6 +73,8 @@ services:
       - "25:25"
     volumes:
       - attachments_data:/app/attachments
+      - /etc/letsencrypt/live/api.infinimail.webrana.id:/etc/ssl/smtp:ro
+      - /etc/letsencrypt/archive/api.infinimail.webrana.id:/etc/letsencrypt/archive/api.infinimail.webrana.id:ro
     depends_on:
       db:
         condition: service_healthy

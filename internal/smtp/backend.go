@@ -161,6 +161,19 @@ func LoadServerConfigFromEnv() *ServerConfig {
 		}
 	}
 
+	// Load TLS configuration if certificate and key are provided
+	certFile := os.Getenv("SMTP_TLS_CERT")
+	keyFile := os.Getenv("SMTP_TLS_KEY")
+	if certFile != "" && keyFile != "" {
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err == nil {
+			cfg.TLSConfig = &tls.Config{
+				Certificates: []tls.Certificate{cert},
+				MinVersion:   tls.VersionTLS12,
+			}
+		}
+	}
+
 	return cfg
 }
 
