@@ -346,3 +346,91 @@ func TestGenerateChallengeToken_Uniqueness(t *testing.T) {
 		tokens[token] = true
 	}
 }
+
+
+func TestGenerateChallengeForLegacyDomain_Success(t *testing.T) {
+	mockRepo := new(MockDomainRepository)
+	config := DomainManagerConfig{
+		SMTPHostname: "mail.test.com",
+		ServerIP:     "192.168.1.1",
+	}
+	service := NewDomainManagerService(mockRepo, config)
+
+	// Legacy domain without DNS challenge
+	existingDomain := &models.Domain{
+		ID:           1,
+		Name:         "legacy.com",
+		IsActive:     true,
+		Status:       "",
+		DNSChallenge: "",
+	}
+
+	mockRepo.On("GetByID", mock.Anything, uint(1)).Return(existingDomain, nil)
+	mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(d *models.Domain) bool {
+		return d.DNSChallenge != "" &&
+			len(d.DNSChallenge) == 32 &&
+			d.Status == models.StatusPendingDNS
+	})).Return(nil)
+
+	err := service.GenerateChallengeForLegacyDomain(context.Background(), 1)
+
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGenerateChallengeForLegacyDomain_AlreadyHasChallenge(t *testing.T) {
+	mockRepo := new(MockDomainRepository)
+	config := DomainManagerConfig{}
+	service := NewDomainManagerService(mockRepo, config)
+
+	// Domain already has challenge token
+	existingDomain := &models.Domain{
+		ID:           1,
+		Name:         "example.com",
+		DNSChallenge: "existing-challenge-token",
+	}
+
+	mockRepo.On("GetByID", mock.Anything, uint(1)).Return(existingDomain, nil)
+
+	err := service.GenerateChallengeForLegacyDomain(context.Background(), 1)
+
+	assert.NoError(t, err)
+	// Update should NOT be called since domain already has challenge
+	mockRepo.AssertNotCalled(t, "Update", mock.Anything, mock.Anything)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGenerateChallengeForLegacyDomain_DomainNotFound(t *testing.T) {
+	mockRepo := new(MockDomainRepository)
+	config := DomainManagerConfig{}
+	service := NewDomainManagerService(mockRepo, config)
+
+	mockRepo.On("GetByID", mock.Anything, uint(1)).Return(nil, repository.ErrNotFound)
+
+	err := service.GenerateChallengeForLegacyDomain(context.Background(), 1)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to get domain")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGenerateChallengeForLegacyDomain_UpdateError(t *testing.T) {
+	mockRepo := new(MockDomainRepository)
+	config := DomainManagerConfig{}
+	service := NewDomainManagerService(mockRepo, config)
+
+	existingDomain := &models.Domain{
+		ID:           1,
+		Name:         "legacy.com",
+		DNSChallenge: "",
+	}
+
+	mockRepo.On("GetByID", mock.Anything, uint(1)).Return(existingDomain, nil)
+	mockRepo.On("Update", mock.Anything, mock.Anything).Return(errors.New("database error"))
+
+	err := service.GenerateChallengeForLegacyDomain(context.Background(), 1)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to update domain with challenge token")
+	mockRepo.AssertExpectations(t)
+}

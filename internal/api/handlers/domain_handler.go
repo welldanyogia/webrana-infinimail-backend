@@ -276,15 +276,34 @@ func (h *DomainHandler) VerifyDNS(c echo.Context) error {
 		return response.InternalError(c, "failed to get domain")
 	}
 
-	// Check domain is in pending_dns status
-	if domain.Status != models.StatusPendingDNS && domain.Status != models.StatusFailed {
+	// Check domain is in pending_dns status or is a legacy domain (active without proper status)
+	// Legacy domains may have empty status or be active without going through the new flow
+	isLegacyDomain := domain.Status == "" || (domain.IsActive && domain.Status != models.StatusActive)
+	if !isLegacyDomain && domain.Status != models.StatusPendingDNS && domain.Status != models.StatusFailed {
 		return response.BadRequest(c, "domain must be in pending_dns or failed status to verify DNS")
+	}
+
+	// For legacy domains without DNS challenge, generate one and update the domain
+	if domain.DNSChallenge == "" {
+		if err := h.domainManager.GenerateChallengeForLegacyDomain(c.Request().Context(), uint(id)); err != nil {
+			return response.InternalError(c, "failed to generate DNS challenge for legacy domain")
+		}
+		// Reload domain with new challenge token
+		domain, err = h.repo.GetByID(c.Request().Context(), uint(id))
+		if err != nil {
+			return response.InternalError(c, "failed to reload domain")
+		}
+		// Return early with message to configure DNS first
+		return response.SuccessWithMessage(c, map[string]interface{}{
+			"domain":  domain,
+			"message": "DNS challenge token generated. Please configure the TXT record and verify again.",
+		}, "DNS challenge token generated for legacy domain")
 	}
 
 	// Verify DNS records
 	result, err := h.dnsVerifier.VerifyDNS(c.Request().Context(), domain)
 	if err != nil {
-		return response.InternalError(c, "DNS verification failed")
+		return response.InternalError(c, "DNS verification failed: "+err.Error())
 	}
 
 	// Update domain status if all verified

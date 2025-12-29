@@ -51,6 +51,10 @@ type DomainManagerService interface {
 
 	// GetDomain retrieves a domain by ID
 	GetDomain(ctx context.Context, domainID uint) (*models.Domain, error)
+
+	// GenerateChallengeForLegacyDomain generates a DNS challenge token for legacy domains
+	// that were created before the Auto SSL feature was implemented
+	GenerateChallengeForLegacyDomain(ctx context.Context, domainID uint) error
 }
 
 // domainManagerService implements DomainManagerService
@@ -189,6 +193,37 @@ func (s *domainManagerService) ActivateDomain(ctx context.Context, domainID uint
 // GetDomain retrieves a domain by ID
 func (s *domainManagerService) GetDomain(ctx context.Context, domainID uint) (*models.Domain, error) {
 	return s.repo.GetByID(ctx, domainID)
+}
+
+// GenerateChallengeForLegacyDomain generates a DNS challenge token for legacy domains
+// that were created before the Auto SSL feature was implemented
+func (s *domainManagerService) GenerateChallengeForLegacyDomain(ctx context.Context, domainID uint) error {
+	// Get existing domain
+	domain, err := s.repo.GetByID(ctx, domainID)
+	if err != nil {
+		return fmt.Errorf("failed to get domain: %w", err)
+	}
+
+	// Only generate if challenge is empty
+	if domain.DNSChallenge != "" {
+		return nil // Already has a challenge token
+	}
+
+	// Generate unique DNS challenge token
+	challengeToken, err := generateChallengeToken()
+	if err != nil {
+		return fmt.Errorf("failed to generate challenge token: %w", err)
+	}
+
+	// Update domain with challenge token and set status to pending_dns
+	domain.DNSChallenge = challengeToken
+	domain.Status = models.StatusPendingDNS
+
+	if err := s.repo.Update(ctx, domain); err != nil {
+		return fmt.Errorf("failed to update domain with challenge token: %w", err)
+	}
+
+	return nil
 }
 
 // generateChallengeToken generates a unique 32-character hex token for DNS verification
