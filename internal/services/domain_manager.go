@@ -22,11 +22,12 @@ type DNSRecord struct {
 
 // DNSGuide contains all DNS records needed for domain setup
 type DNSGuide struct {
-	MXRecord  DNSRecord `json:"mx_record"`
-	ARecord   DNSRecord `json:"a_record"`
-	TXTRecord DNSRecord `json:"txt_record"`
-	SMTPHost  string    `json:"smtp_host"`
-	ServerIP  string    `json:"server_ip"`
+	MXRecord          DNSRecord `json:"mx_record"`
+	ARecord           DNSRecord `json:"a_record"`
+	TXTRecord         DNSRecord `json:"txt_record"`
+	ACMEChallengeInfo string    `json:"acme_challenge_info,omitempty"` // Info about ACME challenge (set during cert generation)
+	SMTPHost          string    `json:"smtp_host"`
+	ServerIP          string    `json:"server_ip"`
 }
 
 // DomainManagerConfig holds configuration for the domain manager service

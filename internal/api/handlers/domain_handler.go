@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/api/response"
@@ -318,6 +319,7 @@ func (h *DomainHandler) VerifyDNS(c echo.Context) error {
 
 // GenerateCertificate handles POST /api/domains/:id/generate-cert
 // Triggers ACME certificate request and updates domain status
+// IMPORTANT: User must add _acme-challenge TXT record before calling this endpoint
 func (h *DomainHandler) GenerateCertificate(c echo.Context) error {
 	if h.domainManager == nil || h.certManager == nil {
 		return response.InternalError(c, "domain manager or certificate manager not configured")
@@ -345,6 +347,16 @@ func (h *DomainHandler) GenerateCertificate(c echo.Context) error {
 	// Generate certificate
 	cert, err := h.certManager.GenerateCertificate(c.Request().Context(), domain)
 	if err != nil {
+		// Check if error contains ACME challenge info
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "_acme-challenge") {
+			// Return more helpful error message
+			return response.BadRequestWithData(c, "ACME DNS challenge failed. Please add the required TXT record and try again.", map[string]interface{}{
+				"error":       errMsg,
+				"hint":        "Add a TXT record with name '_acme-challenge." + domain.Name + "' before generating certificate",
+				"retry_after": "Wait 1-5 minutes for DNS propagation after adding the TXT record",
+			})
+		}
 		// The certificate manager already updates the domain status to failed
 		return response.InternalError(c, "certificate generation failed: "+err.Error())
 	}

@@ -94,6 +94,9 @@ func NewCertificateManagerService(
 }
 
 // GenerateCertificate requests and stores a certificate for a domain using ACME
+// This is a two-step process:
+// 1. First call: Returns ACME challenge info (user needs to add _acme-challenge TXT record)
+// 2. Second call: Completes the challenge and generates the certificate
 func (s *certificateManagerService) GenerateCertificate(ctx context.Context, domain *models.Domain) (*Certificate, error) {
 	if domain == nil {
 		return nil, fmt.Errorf("domain cannot be nil")
@@ -116,17 +119,25 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 	}
 
 	// Get DNS challenge for the primary domain
-	_, err := s.acmeClient.GetDNSChallenge(ctx, domain.Name)
+	challengeInfo, err := s.acmeClient.GetDNSChallenge(ctx, domain.Name)
 	if err != nil {
 		// Update status to failed
 		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, fmt.Sprintf("ACME challenge failed: %v", err))
 		return nil, fmt.Errorf("failed to get DNS challenge: %w", err)
 	}
 
-	// Complete DNS challenge (assumes DNS TXT record is already set from DNS verification)
+	// Store the ACME challenge info in domain error message temporarily
+	// This allows the user to see what TXT record they need to add
+	acmeChallengeMsg := fmt.Sprintf("ACME_CHALLENGE:_acme-challenge.%s=%s", domain.Name, challengeInfo.TXTRecord)
+	if err := s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusPendingCertificate, acmeChallengeMsg); err != nil {
+		return nil, fmt.Errorf("failed to store ACME challenge info: %w", err)
+	}
+
+	// Complete DNS challenge (Let's Encrypt will verify the _acme-challenge TXT record)
 	if err := s.acmeClient.CompleteDNSChallenge(ctx, domain.Name); err != nil {
-		// Update status to failed
-		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, fmt.Sprintf("ACME challenge completion failed: %v", err))
+		// Update status to failed with helpful message
+		errMsg := fmt.Sprintf("ACME DNS challenge failed. Please add TXT record: Name=_acme-challenge.%s Value=%s", domain.Name, challengeInfo.TXTRecord)
+		s.domainManager.UpdateStatus(ctx, domain.ID, models.StatusFailed, errMsg)
 		return nil, fmt.Errorf("failed to complete DNS challenge: %w", err)
 	}
 

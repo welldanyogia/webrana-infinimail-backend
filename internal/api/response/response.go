@@ -99,6 +99,16 @@ func BadRequest(c echo.Context, message string) error {
 	})
 }
 
+// BadRequestWithData returns a 400 Bad Request response with additional data
+func BadRequestWithData(c echo.Context, message string, data interface{}) error {
+	return c.JSON(http.StatusBadRequest, map[string]interface{}{
+		"success": false,
+		"error":   message,
+		"code":    apperrors.CodeInvalidInput,
+		"data":    data,
+	})
+}
+
 // NotFound returns a 404 Not Found response
 func NotFound(c echo.Context, message string) error {
 	return c.JSON(http.StatusNotFound, ErrorResponse{
