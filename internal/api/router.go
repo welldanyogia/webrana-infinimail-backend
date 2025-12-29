@@ -9,6 +9,7 @@ import (
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/api/handlers"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/api/middleware"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
+	"github.com/welldanyogia/webrana-infinimail-backend/internal/services"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/storage"
 	"gorm.io/gorm"
 )
@@ -24,6 +25,11 @@ type RouterConfig struct {
 	RateLimit      int      // Requests per second (0 = use env default)
 	RateBurst      int      // Burst size for rate limiter
 	EnableAuth     bool     // Enable API key authentication
+	// SSL Domain Setup services (optional)
+	DomainManager  services.DomainManagerService
+	DNSVerifier    services.DNSVerifierService
+	DNSExporter    services.DNSExporter
+	CertManager    services.CertificateManagerService
 }
 
 // NewRouter creates and configures the Echo router with all routes
@@ -64,10 +70,23 @@ func NewRouter(cfg *RouterConfig) *echo.Echo {
 
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler(cfg.DB)
-	domainHandler := handlers.NewDomainHandler(domainRepo)
 	mailboxHandler := handlers.NewMailboxHandler(mailboxRepo, domainRepo)
 	messageHandler := handlers.NewMessageHandler(messageRepo, mailboxRepo)
 	attachmentHandler := handlers.NewAttachmentHandler(attachmentRepo, messageRepo, cfg.FileStorage)
+
+	// Initialize domain handler with optional SSL services
+	var domainHandler *handlers.DomainHandler
+	if cfg.DomainManager != nil {
+		domainHandler = handlers.NewDomainHandlerWithServices(
+			domainRepo,
+			cfg.DomainManager,
+			cfg.DNSVerifier,
+			cfg.DNSExporter,
+			cfg.CertManager,
+		)
+	} else {
+		domainHandler = handlers.NewDomainHandler(domainRepo)
+	}
 
 	// Health routes (no auth required)
 	e.GET("/health", healthHandler.Health)
@@ -90,6 +109,13 @@ func NewRouter(cfg *RouterConfig) *echo.Echo {
 	domains.GET("/:id", domainHandler.Get)
 	domains.PUT("/:id", domainHandler.Update)
 	domains.DELETE("/:id", domainHandler.Delete)
+	// SSL Domain Setup routes
+	domains.GET("/:id/dns-guide", domainHandler.GetDNSGuide)
+	domains.GET("/:id/dns-export", domainHandler.GetDNSExport)
+	domains.POST("/:id/verify-dns", domainHandler.VerifyDNS)
+	domains.POST("/:id/generate-cert", domainHandler.GenerateCertificate)
+	domains.GET("/:id/status", domainHandler.GetStatus)
+	domains.POST("/:id/retry", domainHandler.Retry)
 
 	// Mailbox routes
 	mailboxes := api.Group("/mailboxes")
