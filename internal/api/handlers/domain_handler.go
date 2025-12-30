@@ -475,6 +475,10 @@ func (h *DomainHandler) Retry(c echo.Context) error {
 			// Reset to pending_dns to redo DNS verification
 			newStatus = models.StatusPendingDNS
 			message = "Domain reset to pending_dns status for retry"
+		} else if req.ResetTo == "pending_acme_challenge" {
+			// Reset to pending_acme_challenge to retry ACME challenge
+			newStatus = models.StatusPendingACMEChallenge
+			message = "Domain reset to pending_acme_challenge status for retry"
 		} else {
 			// Default: check error message to determine best reset point
 			// If error is related to certificate/ACME, reset to dns_verified
@@ -497,6 +501,16 @@ func (h *DomainHandler) Retry(c echo.Context) error {
 		// Ready for certificate generation
 		message = "Ready to generate certificate"
 		return response.SuccessWithMessage(c, domain, message)
+	case models.StatusPendingACMEChallenge:
+		// ACME challenge requested, waiting for user to add DNS record
+		// Reset to dns_verified to request a new ACME challenge
+		newStatus = models.StatusDNSVerified
+		message = "Domain reset to dns_verified status to request new ACME challenge"
+	case models.StatusACMEChallengeReady:
+		// DNS verified locally, ready to submit to Let's Encrypt
+		// User can retry submitting the challenge
+		message = "Ready to submit ACME challenge to Let's Encrypt"
+		return response.SuccessWithMessage(c, domain, message)
 	case models.StatusPendingCertificate:
 		// Certificate generation in progress, reset to dns_verified to retry
 		newStatus = models.StatusDNSVerified
@@ -509,7 +523,14 @@ func (h *DomainHandler) Retry(c echo.Context) error {
 		message = "Domain is already active"
 		return response.SuccessWithMessage(c, domain, message)
 	default:
-		return response.BadRequest(c, "unknown domain status")
+		// Handle empty status (legacy domains) or truly unknown status
+		if domain.Status == "" {
+			// Legacy domain without status, set to pending_dns
+			newStatus = models.StatusPendingDNS
+			message = "Legacy domain updated to pending_dns status"
+		} else {
+			return response.BadRequest(c, "unknown domain status: "+string(domain.Status))
+		}
 	}
 
 	// Update status
