@@ -278,7 +278,7 @@ func (c *acmeClient) CompleteDNSChallenge(ctx context.Context, domain string) er
 
 	// Wait for DNS propagation before accepting challenge
 	// Let's Encrypt validates from multiple vantage points globally
-	propagationDelay := 90 * time.Second // 90 seconds for DNS propagation
+	propagationDelay := 5 * time.Minute // 5 minutes for DNS propagation (increased from 90s)
 	log.Printf("[ACME] Waiting %v for DNS propagation...", propagationDelay)
 	logger.LogInfo(domain, "dns_propagation", fmt.Sprintf("Waiting %v for DNS propagation", propagationDelay))
 
