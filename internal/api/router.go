@@ -116,6 +116,11 @@ func NewRouter(cfg *RouterConfig) *echo.Echo {
 	domains.POST("/:id/generate-cert", domainHandler.GenerateCertificate)
 	domains.GET("/:id/status", domainHandler.GetStatus)
 	domains.POST("/:id/retry", domainHandler.Retry)
+	// Manual DNS Verification routes (ACME challenge flow)
+	domains.POST("/:id/request-acme-challenge", domainHandler.RequestACMEChallenge)
+	domains.POST("/:id/verify-acme-dns", domainHandler.VerifyACMEDNS)
+	domains.POST("/:id/submit-acme-challenge", domainHandler.SubmitACMEChallenge)
+	domains.GET("/:id/acme-status", domainHandler.GetACMEStatus)
 
 	// Mailbox routes
 	mailboxes := api.Group("/mailboxes")

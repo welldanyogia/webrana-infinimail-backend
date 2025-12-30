@@ -65,6 +65,27 @@ func (m *mockCertManagerForRenewal) SetAutoRenew(ctx context.Context, domainID u
 
 func (m *mockCertManagerForRenewal) SetCertificateStore(certStore CertificateStore) {}
 
+// Manual DNS Verification methods (required by interface)
+func (m *mockCertManagerForRenewal) RequestACMEChallenge(ctx context.Context, domainID uint) (*ACMEChallengeInfo, error) {
+	return nil, nil
+}
+
+func (m *mockCertManagerForRenewal) VerifyACMEDNS(ctx context.Context, domainID uint) (*ACMEDNSVerificationResult, error) {
+	return nil, nil
+}
+
+func (m *mockCertManagerForRenewal) SubmitACMEChallenge(ctx context.Context, domainID uint) error {
+	return nil
+}
+
+func (m *mockCertManagerForRenewal) GetACMEStatus(ctx context.Context, domainID uint) (*ACMEStatus, error) {
+	return nil, nil
+}
+
+func (m *mockCertManagerForRenewal) ClearACMEChallenge(ctx context.Context, domainID uint) error {
+	return nil
+}
+
 func (m *mockCertManagerForRenewal) getRenewedDomainIDs() []uint {
 	m.mu.Lock()
 	defer m.mu.Unlock()

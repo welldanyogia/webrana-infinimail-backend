@@ -598,3 +598,177 @@ func getNextStepForStatus(status models.DomainStatus) string {
 		return ""
 	}
 }
+
+
+// ============================================================================
+// Manual DNS Verification Handlers
+// ============================================================================
+
+// RequestACMEChallenge handles POST /api/domains/:id/request-acme-challenge
+// Requests ACME challenge from Let's Encrypt and returns TXT record info for user
+func (h *DomainHandler) RequestACMEChallenge(c echo.Context) error {
+	if h.certManager == nil {
+		return response.InternalError(c, "certificate manager not configured")
+	}
+
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return response.BadRequest(c, "invalid domain ID")
+	}
+
+	// Get domain to validate status
+	domain, err := h.repo.GetByID(c.Request().Context(), uint(id))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return response.NotFound(c, "domain not found")
+		}
+		return response.InternalError(c, "failed to get domain")
+	}
+
+	// Validate domain is in dns_verified status
+	if domain.Status != models.StatusDNSVerified {
+		return response.BadRequestWithData(c, "domain must be in dns_verified status to request ACME challenge", map[string]interface{}{
+			"current_status":   domain.Status,
+			"required_status":  models.StatusDNSVerified,
+			"suggested_action": "Please verify DNS records first using POST /api/domains/:id/verify-dns",
+		})
+	}
+
+	// Request ACME challenge
+	challengeInfo, err := h.certManager.RequestACMEChallenge(c.Request().Context(), uint(id))
+	if err != nil {
+		return response.InternalError(c, "failed to request ACME challenge: "+err.Error())
+	}
+
+	return response.Success(c, challengeInfo)
+}
+
+
+// VerifyACMEDNS handles POST /api/domains/:id/verify-acme-dns
+// Verifies that the ACME challenge TXT record is correctly configured
+// Does NOT submit to Let's Encrypt - just local DNS check
+func (h *DomainHandler) VerifyACMEDNS(c echo.Context) error {
+	if h.certManager == nil {
+		return response.InternalError(c, "certificate manager not configured")
+	}
+
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return response.BadRequest(c, "invalid domain ID")
+	}
+
+	// Get domain to validate it has an active challenge
+	domain, err := h.repo.GetByID(c.Request().Context(), uint(id))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return response.NotFound(c, "domain not found")
+		}
+		return response.InternalError(c, "failed to get domain")
+	}
+
+	// Validate domain has an active challenge
+	if domain.ACMEChallengeToken == "" || domain.ACMEChallengeValue == "" {
+		return response.BadRequestWithData(c, "no active ACME challenge found", map[string]interface{}{
+			"current_status":   domain.Status,
+			"suggested_action": "Please request an ACME challenge first using POST /api/domains/:id/request-acme-challenge",
+		})
+	}
+
+	// Verify ACME DNS
+	result, err := h.certManager.VerifyACMEDNS(c.Request().Context(), uint(id))
+	if err != nil {
+		return response.InternalError(c, "failed to verify ACME DNS: "+err.Error())
+	}
+
+	return response.Success(c, result)
+}
+
+
+// SubmitACMEChallenge handles POST /api/domains/:id/submit-acme-challenge
+// Submits the ACME challenge to Let's Encrypt for validation and generates certificate
+// Should only be called after VerifyACMEDNS returns success
+func (h *DomainHandler) SubmitACMEChallenge(c echo.Context) error {
+	if h.certManager == nil {
+		return response.InternalError(c, "certificate manager not configured")
+	}
+
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return response.BadRequest(c, "invalid domain ID")
+	}
+
+	// Get domain to validate status
+	domain, err := h.repo.GetByID(c.Request().Context(), uint(id))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return response.NotFound(c, "domain not found")
+		}
+		return response.InternalError(c, "failed to get domain")
+	}
+
+	// Validate domain is in acme_challenge_ready status
+	if domain.Status != models.StatusACMEChallengeReady {
+		return response.BadRequestWithData(c, "domain must be in acme_challenge_ready status to submit ACME challenge", map[string]interface{}{
+			"current_status":   domain.Status,
+			"required_status":  models.StatusACMEChallengeReady,
+			"suggested_action": "Please verify DNS first using POST /api/domains/:id/verify-acme-dns",
+		})
+	}
+
+	// Submit ACME challenge
+	err = h.certManager.SubmitACMEChallenge(c.Request().Context(), uint(id))
+	if err != nil {
+		// Get updated domain to include error message
+		domain, _ = h.repo.GetByID(c.Request().Context(), uint(id))
+		return response.BadRequestWithData(c, "ACME challenge submission failed", map[string]interface{}{
+			"error":            err.Error(),
+			"domain_status":    domain.Status,
+			"suggested_action": "Please check the error message and try again. You may need to verify DNS again or request a new challenge.",
+		})
+	}
+
+	// Get updated domain with certificate info
+	domain, _ = h.repo.GetByID(c.Request().Context(), uint(id))
+
+	// Activate domain after certificate is issued
+	if h.domainManager != nil && domain.Status == models.StatusCertificateIssued {
+		if err := h.domainManager.ActivateDomain(c.Request().Context(), uint(id)); err != nil {
+			return response.InternalError(c, "certificate issued but failed to activate domain: "+err.Error())
+		}
+		// Get updated domain
+		domain, _ = h.repo.GetByID(c.Request().Context(), uint(id))
+	}
+
+	return response.SuccessWithMessage(c, domain, "Certificate generated and domain activated successfully!")
+}
+
+
+// GetACMEStatus handles GET /api/domains/:id/acme-status
+// Returns the current ACME challenge status with challenge info
+func (h *DomainHandler) GetACMEStatus(c echo.Context) error {
+	if h.certManager == nil {
+		return response.InternalError(c, "certificate manager not configured")
+	}
+
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return response.BadRequest(c, "invalid domain ID")
+	}
+
+	// Check domain exists
+	_, err = h.repo.GetByID(c.Request().Context(), uint(id))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return response.NotFound(c, "domain not found")
+		}
+		return response.InternalError(c, "failed to get domain")
+	}
+
+	// Get ACME status
+	status, err := h.certManager.GetACMEStatus(c.Request().Context(), uint(id))
+	if err != nil {
+		return response.InternalError(c, "failed to get ACME status: "+err.Error())
+	}
+
+	return response.Success(c, status)
+}
