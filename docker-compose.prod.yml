@@ -71,7 +71,7 @@ services:
       AUTO_PROVISIONING_ENABLED: "true"
       
       # Logging
-      LOG_LEVEL: info
+      LOG_LEVEL: debug
     ports:
       - "8080:8080"
       - "25:25"
