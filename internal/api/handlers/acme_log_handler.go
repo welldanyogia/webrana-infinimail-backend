@@ -125,25 +125,50 @@ func generateLogsListHTML(logs []services.ACMEDomainLogSummary) string {
         .status-failed { background: #f8d7da; color: #721c24; }
         .status-in_progress { background: #fff3cd; color: #856404; }
         .meta { color: #666; font-size: 0.9em; }
+        .error-summary { color: #dc3545; font-size: 0.85em; margin-top: 5px; }
+        .progress-bar {
+            width: 100px;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            transition: width 0.3s ease;
+        }
         a { color: #007bff; text-decoration: none; }
         a:hover { text-decoration: underline; }
         .empty { text-align: center; padding: 40px; color: #666; }
-        .refresh-btn {
-            background: #007bff;
-            color: white;
+        .btn {
             border: none;
             padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 8px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 20px;
         }
-        .refresh-btn:hover { background: #0056b3; }
+        .auto-refresh-label { font-size: 0.9em; color: #666; }
     </style>
 </head>
 <body>
     <h1>🔐 ACME Certificate Logs</h1>
-    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
-    <p class="meta">Auto-refresh: <a href="javascript:setInterval(()=>location.reload(),10000)">Enable (10s)</a></p>
+    <div class="header-actions">
+        <button class="btn btn-primary" onclick="location.reload()">🔄 Refresh</button>
+        <label class="auto-refresh-label">
+            <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()"> Auto-refresh (10s)
+        </label>
+    </div>
 `
 
 	if len(logs) == 0 {
@@ -152,6 +177,11 @@ func generateLogsListHTML(logs []services.ACMEDomainLogSummary) string {
 		html += `<ul class="log-list">`
 		for _, log := range logs {
 			statusClass := "status-" + log.Status
+			progressPercent := 0
+			if log.TotalSteps > 0 {
+				progressPercent = (log.CurrentStep * 100) / log.TotalSteps
+			}
+			
 			html += `<li class="log-item">
                 <div>
                     <a href="/acme/logs/` + template.HTMLEscapeString(log.Domain) + `" class="domain">` + template.HTMLEscapeString(log.Domain) + `</a>
@@ -159,21 +189,56 @@ func generateLogsListHTML(logs []services.ACMEDomainLogSummary) string {
                         Started: ` + log.StartedAt.Format(time.RFC3339) + ` | 
                         Updated: ` + log.UpdatedAt.Format(time.RFC3339) + ` |
                         Entries: ` + intToString(log.EntryCount) + `
-                    </div>
-                </div>
+                    </div>`
+			
+			// Show progress bar for in_progress status
+			if log.Status == "in_progress" && log.TotalSteps > 0 {
+				html += `<div class="progress-bar"><div class="progress-fill" style="width: ` + intToString(progressPercent) + `%"></div></div>`
+			}
+			
+			// Show error summary if failed
+			if log.Status == "failed" && log.ErrorSummary != "" {
+				errorSummary := log.ErrorSummary
+				if len(errorSummary) > 100 {
+					errorSummary = errorSummary[:100] + "..."
+				}
+				html += `<div class="error-summary">❌ ` + template.HTMLEscapeString(errorSummary) + `</div>`
+			}
+			
+			html += `</div>
                 <span class="status ` + statusClass + `">` + template.HTMLEscapeString(log.Status) + `</span>
             </li>`
 		}
 		html += `</ul>`
 	}
 
-	html += `</body></html>`
+	html += `
+    <script>
+        let autoRefreshInterval = null;
+        
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(() => location.reload(), 10000);
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        }
+    </script>
+</body></html>`
 	return html
 }
 
 
 func generateDomainLogHTML(log *services.ACMEDomainLog) string {
 	statusClass := "status-" + log.Status
+	
+	// Generate JSON for copy functionality
+	logJSON, _ := json.MarshalIndent(log, "", "  ")
+	escapedJSON := template.JSEscapeString(string(logJSON))
 
 	html := `<!DOCTYPE html>
 <html lang="en">
@@ -254,27 +319,113 @@ func generateDomainLogHTML(log *services.ACMEDomainLog) string {
         }
         a { color: #007bff; text-decoration: none; }
         a:hover { text-decoration: underline; }
-        .refresh-btn {
-            background: #007bff;
-            color: white;
+        .btn {
             border: none;
             padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 8px;
         }
-        .refresh-btn:hover { background: #0056b3; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
         .filter-bar {
             margin: 15px 0;
             padding: 10px;
             background: white;
             border-radius: 6px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .filter-bar label { margin-right: 15px; cursor: pointer; }
+        .action-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .json-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        .json-modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 80%;
+            overflow: auto;
+            position: relative;
+        }
+        .json-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .json-modal-close:hover { color: #333; }
+        .json-content {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 60vh;
+            overflow: auto;
+        }
+        .json-modal-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
     <a href="/acme/logs" class="back-link">← Back to all logs</a>
-    <button class="refresh-btn" onclick="location.reload()" style="float:right">🔄 Refresh</button>
+    
+    <div class="action-bar" style="float:right">
+        <button class="btn btn-success" onclick="copyJSON()">📋 Copy JSON</button>
+        <button class="btn btn-secondary" onclick="showJSONModal()">👁️ View JSON</button>
+        <button class="btn btn-primary" onclick="location.reload()">🔄 Refresh</button>
+    </div>
+    
+    <div style="clear:both"></div>
     
     <div class="header">
         <h1>🔐 ` + template.HTMLEscapeString(log.Domain) + `</h1>
@@ -292,6 +443,22 @@ func generateDomainLogHTML(log *services.ACMEDomainLog) string {
         <label><input type="checkbox" checked onchange="toggleLevel('WARNING')"> WARNING</label>
         <label><input type="checkbox" checked onchange="toggleLevel('ERROR')"> ERROR</label>
         <label><input type="checkbox" checked onchange="toggleLevel('DEBUG')"> DEBUG</label>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast">✅ JSON copied to clipboard!</div>
+
+    <!-- JSON Modal -->
+    <div id="jsonModal" class="json-modal" onclick="hideJSONModal(event)">
+        <div class="json-modal-content" onclick="event.stopPropagation()">
+            <span class="json-modal-close" onclick="hideJSONModal()">&times;</span>
+            <h3>📄 Full JSON Log</h3>
+            <div class="json-content" id="jsonContent"></div>
+            <div class="json-modal-actions">
+                <button class="btn btn-success" onclick="copyJSON()">📋 Copy to Clipboard</button>
+                <button class="btn btn-secondary" onclick="downloadJSON()">💾 Download JSON</button>
+            </div>
+        </div>
     </div>
 
     <ul class="entries">`
@@ -321,11 +488,76 @@ func generateDomainLogHTML(log *services.ACMEDomainLog) string {
     </ul>
 
     <script>
+        const logData = ` + escapedJSON + `;
+        const domain = "` + template.JSEscapeString(log.Domain) + `";
+
         function toggleLevel(level) {
             document.querySelectorAll('.entry[data-level="' + level + '"]').forEach(el => {
                 el.style.display = el.style.display === 'none' ? 'block' : 'none';
             });
         }
+
+        function copyJSON() {
+            const jsonStr = JSON.stringify(logData, null, 2);
+            navigator.clipboard.writeText(jsonStr).then(() => {
+                showToast('✅ JSON copied to clipboard!');
+            }).catch(err => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = jsonStr;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✅ JSON copied to clipboard!');
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        function showJSONModal() {
+            const modal = document.getElementById('jsonModal');
+            const content = document.getElementById('jsonContent');
+            content.textContent = JSON.stringify(logData, null, 2);
+            modal.style.display = 'flex';
+        }
+
+        function hideJSONModal(event) {
+            if (!event || event.target.id === 'jsonModal') {
+                document.getElementById('jsonModal').style.display = 'none';
+            }
+        }
+
+        function downloadJSON() {
+            const jsonStr = JSON.stringify(logData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = domain + '-log.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ JSON downloaded!');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'c' && !window.getSelection().toString()) {
+                copyJSON();
+            }
+            if (e.key === 'Escape') {
+                hideJSONModal();
+            }
+        });
     </script>
 </body>
 </html>`
