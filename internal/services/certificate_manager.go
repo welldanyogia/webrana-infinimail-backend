@@ -652,12 +652,13 @@ func (s *certificateManagerService) VerifyACMEDNS(ctx context.Context, domainID 
 
 		log.Printf("[CertManager] ACME DNS verified for domain: %s", domain.Name)
 	} else {
+		// Provide detailed error message with expected and found values
 		if len(foundValues) == 0 {
-			result.Message = fmt.Sprintf("DNS TXT record not found. Please add a TXT record for %s with value: %s",
+			result.Message = fmt.Sprintf("DNS TXT record not found. Please add a TXT record for '%s' with value: '%s'. DNS propagation may take up to 24 hours - please wait a few minutes after adding the record before verifying again.",
 				challengeDomain, domain.ACMEChallengeValue)
 		} else {
-			result.Message = fmt.Sprintf("DNS TXT record does not match. Expected: %s, Found: %v. Please update the record with the correct value.",
-				domain.ACMEChallengeValue, foundValues)
+			result.Message = fmt.Sprintf("DNS TXT record value mismatch. Expected: '%s', Found: %v. Please update the TXT record '%s' with the correct value.",
+				domain.ACMEChallengeValue, foundValues, challengeDomain)
 		}
 	}
 

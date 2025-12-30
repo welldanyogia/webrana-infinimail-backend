@@ -136,6 +136,68 @@ func InternalError(c echo.Context, message string) error {
 	})
 }
 
+// ACMEErrorResponse represents an ACME-specific error response with detailed context
+type ACMEErrorResponse struct {
+	Success         bool     `json:"success"`
+	Error           string   `json:"error"`
+	Code            string   `json:"code"`
+	ExpectedValue   string   `json:"expected_value,omitempty"`
+	FoundValues     []string `json:"found_values,omitempty"`
+	SuggestedAction string   `json:"suggested_action"`
+	Domain          string   `json:"domain,omitempty"`
+	TXTRecordName   string   `json:"txt_record_name,omitempty"`
+	CurrentStatus   string   `json:"current_status,omitempty"`
+	RequiredStatus  string   `json:"required_status,omitempty"`
+}
+
+// ACMEError returns an ACME-specific error response with detailed context
+// This includes expected/found values for DNS errors and suggested actions
+func ACMEError(c echo.Context, acmeErr *apperrors.ACMEError) error {
+	status := getHTTPStatusForACME(acmeErr.Code)
+	
+	return c.JSON(status, ACMEErrorResponse{
+		Success:         false,
+		Error:           acmeErr.Message,
+		Code:            acmeErr.Code,
+		ExpectedValue:   acmeErr.ExpectedValue,
+		FoundValues:     acmeErr.FoundValues,
+		SuggestedAction: acmeErr.SuggestedAction,
+		Domain:          acmeErr.Domain,
+		TXTRecordName:   acmeErr.TXTRecordName,
+		CurrentStatus:   acmeErr.CurrentStatus,
+		RequiredStatus:  acmeErr.RequiredStatus,
+	})
+}
+
+// ACMEErrorFromError checks if the error is an ACMEError and returns appropriate response
+// If not an ACMEError, returns a generic internal error
+func ACMEErrorFromError(c echo.Context, err error) error {
+	if acmeErr := apperrors.GetACMEError(err); acmeErr != nil {
+		return ACMEError(c, acmeErr)
+	}
+	return InternalError(c, err.Error())
+}
+
+// getHTTPStatusForACME maps ACME error codes to HTTP status codes
+func getHTTPStatusForACME(code string) int {
+	switch code {
+	case apperrors.CodeACMEChallengeFailed:
+		return http.StatusInternalServerError
+	case apperrors.CodeACMEChallengeExpired:
+		return http.StatusBadRequest
+	case apperrors.CodeACMEDNSVerificationFailed:
+		return http.StatusBadRequest
+	case apperrors.CodeACMEValidationFailed:
+		return http.StatusBadRequest
+	case apperrors.CodeInvalidDomainStatus:
+		return http.StatusBadRequest
+	case apperrors.CodeNoChallengeFound:
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
 // getHTTPStatus maps error codes to HTTP status codes
 func getHTTPStatus(code string) int {
 	switch code {

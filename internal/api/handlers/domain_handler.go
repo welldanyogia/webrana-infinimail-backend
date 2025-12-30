@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/api/response"
+	apperrors "github.com/welldanyogia/webrana-infinimail-backend/internal/errors"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/models"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/repository"
 	"github.com/welldanyogia/webrana-infinimail-backend/internal/services"
@@ -627,17 +628,31 @@ func (h *DomainHandler) RequestACMEChallenge(c echo.Context) error {
 
 	// Validate domain is in dns_verified status
 	if domain.Status != models.StatusDNSVerified {
-		return response.BadRequestWithData(c, "domain must be in dns_verified status to request ACME challenge", map[string]interface{}{
-			"current_status":   domain.Status,
-			"required_status":  models.StatusDNSVerified,
-			"suggested_action": "Please verify DNS records first using POST /api/domains/:id/verify-dns",
-		})
+		acmeErr := apperrors.NewInvalidDomainStatusError(
+			domain.Name,
+			string(domain.Status),
+			string(models.StatusDNSVerified),
+			"request ACME challenge",
+		)
+		return response.ACMEError(c, acmeErr)
 	}
 
 	// Request ACME challenge
 	challengeInfo, err := h.certManager.RequestACMEChallenge(c.Request().Context(), uint(id))
 	if err != nil {
-		return response.InternalError(c, "failed to request ACME challenge: "+err.Error())
+		// Check if it's an ACME error
+		if acmeErr := apperrors.GetACMEError(err); acmeErr != nil {
+			return response.ACMEError(c, acmeErr)
+		}
+		// Create a generic ACME error with suggested action
+		acmeErr := apperrors.NewACMEError(
+			err,
+			apperrors.CodeACMEChallengeFailed,
+			"Failed to request ACME challenge: "+err.Error(),
+			"Please try again. If the problem persists, check your domain configuration and ensure DNS records are properly set up.",
+		)
+		acmeErr.Domain = domain.Name
+		return response.ACMEError(c, acmeErr)
 	}
 
 	return response.Success(c, challengeInfo)
@@ -668,15 +683,17 @@ func (h *DomainHandler) VerifyACMEDNS(c echo.Context) error {
 
 	// Validate domain has an active challenge
 	if domain.ACMEChallengeToken == "" || domain.ACMEChallengeValue == "" {
-		return response.BadRequestWithData(c, "no active ACME challenge found", map[string]interface{}{
-			"current_status":   domain.Status,
-			"suggested_action": "Please request an ACME challenge first using POST /api/domains/:id/request-acme-challenge",
-		})
+		acmeErr := apperrors.NewNoChallengeFoundError(domain.Name)
+		return response.ACMEError(c, acmeErr)
 	}
 
 	// Verify ACME DNS
 	result, err := h.certManager.VerifyACMEDNS(c.Request().Context(), uint(id))
 	if err != nil {
+		// Check if it's an ACME error
+		if acmeErr := apperrors.GetACMEError(err); acmeErr != nil {
+			return response.ACMEError(c, acmeErr)
+		}
 		return response.InternalError(c, "failed to verify ACME DNS: "+err.Error())
 	}
 
@@ -708,11 +725,13 @@ func (h *DomainHandler) SubmitACMEChallenge(c echo.Context) error {
 
 	// Validate domain is in acme_challenge_ready status
 	if domain.Status != models.StatusACMEChallengeReady {
-		return response.BadRequestWithData(c, "domain must be in acme_challenge_ready status to submit ACME challenge", map[string]interface{}{
-			"current_status":   domain.Status,
-			"required_status":  models.StatusACMEChallengeReady,
-			"suggested_action": "Please verify DNS first using POST /api/domains/:id/verify-acme-dns",
-		})
+		acmeErr := apperrors.NewInvalidDomainStatusError(
+			domain.Name,
+			string(domain.Status),
+			string(models.StatusACMEChallengeReady),
+			"submit ACME challenge",
+		)
+		return response.ACMEError(c, acmeErr)
 	}
 
 	// Submit ACME challenge
@@ -720,11 +739,17 @@ func (h *DomainHandler) SubmitACMEChallenge(c echo.Context) error {
 	if err != nil {
 		// Get updated domain to include error message
 		domain, _ = h.repo.GetByID(c.Request().Context(), uint(id))
-		return response.BadRequestWithData(c, "ACME challenge submission failed", map[string]interface{}{
-			"error":            err.Error(),
-			"domain_status":    domain.Status,
-			"suggested_action": "Please check the error message and try again. You may need to verify DNS again or request a new challenge.",
-		})
+		
+		// Check if it's an ACME error
+		if acmeErr := apperrors.GetACMEError(err); acmeErr != nil {
+			acmeErr.CurrentStatus = string(domain.Status)
+			return response.ACMEError(c, acmeErr)
+		}
+		
+		// Create a detailed ACME validation error
+		acmeErr := apperrors.NewACMEValidationError(domain.Name, err)
+		acmeErr.CurrentStatus = string(domain.Status)
+		return response.ACMEError(c, acmeErr)
 	}
 
 	// Get updated domain with certificate info
@@ -767,6 +792,10 @@ func (h *DomainHandler) GetACMEStatus(c echo.Context) error {
 	// Get ACME status
 	status, err := h.certManager.GetACMEStatus(c.Request().Context(), uint(id))
 	if err != nil {
+		// Check if it's an ACME error
+		if acmeErr := apperrors.GetACMEError(err); acmeErr != nil {
+			return response.ACMEError(c, acmeErr)
+		}
 		return response.InternalError(c, "failed to get ACME status: "+err.Error())
 	}
 
