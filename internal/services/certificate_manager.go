@@ -209,13 +209,11 @@ func (s *certificateManagerService) GenerateCertificate(ctx context.Context, dom
 		return nil, fmt.Errorf("failed to update domain status to pending_certificate: %w", err)
 	}
 
-	// Prepare domains for certificate (main domain + mail subdomain for SAN)
-	domains := []string{
-		domain.Name,
-		fmt.Sprintf("mail.%s", domain.Name),
-	}
-	log.Printf("[CertManager] Requesting certificate for domains: %v", domains)
-	acmeLogger.LogInfo(domain.Name, "domains", fmt.Sprintf("Requesting certificate for domains: %v", domains))
+	// Use single-domain mode - only the main domain
+	// This ensures CSR matches the Order (which was created for single domain)
+	domains := []string{domain.Name}
+	log.Printf("[CertManager] Requesting certificate for domain: %s", domain.Name)
+	acmeLogger.LogInfo(domain.Name, "domains", fmt.Sprintf("Requesting certificate for domain: %s", domain.Name))
 
 	// Complete DNS challenge with Let's Encrypt (submit only, no automatic precheck/wait)
 	// The DNS has already been verified by VerifyACMEDNS
@@ -368,11 +366,9 @@ func (s *certificateManagerService) RenewCertificate(ctx context.Context, domain
 		return nil, fmt.Errorf("failed to get domain: %w", err)
 	}
 
-	// Prepare domains for certificate (main domain + mail subdomain for SAN)
-	domains := []string{
-		domain.Name,
-		fmt.Sprintf("mail.%s", domain.Name),
-	}
+	// Use single-domain mode - only the main domain
+	// This ensures CSR matches the Order (which was created for single domain)
+	domains := []string{domain.Name}
 
 	// Get DNS challenge for the primary domain
 	_, err = s.acmeClient.GetDNSChallenge(ctx, domain.Name)
@@ -754,15 +750,13 @@ func (s *certificateManagerService) SubmitACMEChallenge(ctx context.Context, dom
 	acmeLogger.LogInfo(domain.Name, "validation_success", "ACME challenge validated successfully")
 
 	// Proceed to certificate generation
-	// Prepare domains for certificate (main domain + mail subdomain for SAN)
-	domains := []string{
-		domain.Name,
-		fmt.Sprintf("mail.%s", domain.Name),
-	}
+	// Use single-domain mode - only the main domain
+	// This ensures CSR matches the Order (which was created for single domain)
+	domains := []string{domain.Name}
 
 	// Request certificate from ACME
-	log.Printf("[CertManager] Requesting certificate from ACME server...")
-	acmeLogger.LogInfo(domain.Name, "request_cert", "Requesting certificate from ACME server")
+	log.Printf("[CertManager] Requesting certificate from ACME server for domain: %s", domain.Name)
+	acmeLogger.LogInfo(domain.Name, "request_cert", fmt.Sprintf("Requesting certificate from ACME server for domain: %s", domain.Name))
 	bundle, err := s.acmeClient.RequestCertificate(ctx, domains)
 	if err != nil {
 		errMsg := fmt.Sprintf("Certificate request failed: %v", err)
